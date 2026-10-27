@@ -84,11 +84,20 @@ document.addEventListener('DOMContentLoaded', () => {
     loginError.classList.add('hidden');
   });
 
+  function getAdminApiUrl(pwd) {
+    const appsScriptUrl = window.APP_CONFIG && window.APP_CONFIG.GOOGLE_APPS_SCRIPT_URL;
+    if (appsScriptUrl && appsScriptUrl.trim().length > 10 && (window.location.hostname.includes('github.io') || !window.location.port || window.location.protocol === 'file:')) {
+      return `${appsScriptUrl}?action=getSubmissions&password=${encodeURIComponent(pwd)}`;
+    }
+    return `/api/admin/submissions?password=${encodeURIComponent(pwd)}`;
+  }
+
   async function authenticate(pwd, showError) {
     try {
-      const res = await fetch(`/api/admin/submissions?password=${encodeURIComponent(pwd)}`);
-      if (res.ok) {
-        const data = await res.json();
+      const url = getAdminApiUrl(pwd);
+      const res = await fetch(url);
+      const data = await res.json();
+      if (res.ok && data.success !== false) {
         adminPassword = pwd;
         sessionStorage.setItem('grya_admin_pwd', pwd);
 
@@ -104,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboard(data);
       } else {
         if (showError) {
-          loginError.textContent = 'Password admin salah. Silakan coba kembali.';
+          loginError.textContent = data.message || 'Password admin salah. Silakan coba kembali.';
           loginError.classList.remove('hidden');
         }
       }
@@ -120,7 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadData() {
     if (!adminPassword) return;
     try {
-      const res = await fetch(`/api/admin/submissions?password=${encodeURIComponent(adminPassword)}`);
+      const url = getAdminApiUrl(adminPassword);
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         renderDashboard(data);
