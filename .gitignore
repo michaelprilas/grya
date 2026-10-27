@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Environment & Config
+.env
+.env.local
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# User Uploads & Data
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Root Screenshots / Temp
+/*.png

@@ -1,0 +1,11 @@
+{
+  "adminPassword": "adminpkp2026",
+  "validQuizCodes": [
+    "2134",
+    "1423",
+    "1234",
+    "GRYA2026"
+  ],
+  "primaryQuizCode": "2134",
+  "googleAppsScriptUrl": ""
+}

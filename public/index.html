@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>Kuis Detektif GRYA | Kementerian Perumahan dan Kawasan Permukiman</title>
+  
+  <link rel="icon" type="image/svg+xml" href="images/logo-pkp.svg">
+  <meta name="description" content="Form Pengumpulan Jawaban Kuis Majalah Kementerian PKP - Detektif GRYA (Empat Pintu Satu Kode Rahasia).">
+  <meta name="theme-color" content="#D65A3C">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pkp: {
+              terracotta: '#D65A3C',
+              navy: '#12233F',
+              cream: '#F0D0A0'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons & Canvas Confetti -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Clean Harmonized CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- ==================== HEADER (CLEAN & ELEGANT) ==================== -->
+  <header class="hero-header text-white pt-5 pb-6 px-4">
+    <div class="w-full max-w-md mx-auto">
+      
+      <!-- Top Brand Row -->
+      <div class="flex items-center justify-between gap-2 mb-4">
+        <div class="flex items-center space-x-2 min-w-0 flex-1">
+          <div class="w-8 h-8 bg-white/15 backdrop-blur-md rounded-lg p-1 flex items-center justify-center border border-white/25 flex-shrink-0">
+            <img src="images/logo-pkp.svg" alt="Logo Kementerian PKP" class="w-full h-full object-contain">
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wide text-[#F0D0A0] leading-tight">Kementerian Perumahan dan Kawasan Permukiman</p>
+            <p class="text-[10.5px] sm:text-xs font-semibold text-white/90 leading-tight mt-0.5">Biro Komunikasi Publik</p>
+          </div>
+        </div>
+        
+        <span class="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider bg-black/25 text-[#F0D0A0] border border-[#F0D0A0]/30 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
+          Majalah GRYA Edisi II
+        </span>
+      </div>
+
+      <!-- Title & Subtitle (Official PNG Wordmark) -->
+      <div class="text-center py-1 flex flex-col items-center justify-center">
+        <h1 class="w-full flex justify-center">
+          <img src="images/title-detektif-grya.png" alt="Detektif GRYA" class="w-56 sm:w-64 max-w-[80vw] h-auto object-contain drop-shadow-md">
+        </h1>
+        <p class="font-serif italic text-sm sm:text-base text-[#F0D0A0] mt-1.5 tracking-wide">
+          Empat Pintu Satu Kode Rahasia
+        </p>
+      </div>
+
+      <!-- Clean Instruction -->
+      <p class="text-xs text-white/90 font-normal leading-relaxed text-center mt-3 max-w-sm mx-auto">
+        Isi form di bawah untuk ikut undian hadiah. Pastikan kode kuis dan bukti Instagram Story sudah benar sebelum mengirim.
+      </p>
+
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+  <main class="max-w-md mx-auto px-4 -mt-2 relative z-10 w-full flex-grow space-y-3.5">
+
+    <!-- Global Alert Notification -->
+    <div id="globalAlert" class="hidden p-3.5 rounded-xl text-xs font-medium border flex items-start space-x-2.5 shadow-sm" role="alert">
+      <i id="globalAlertIcon" data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+      <div id="globalAlertText" class="flex-grow leading-relaxed"></div>
+    </div>
+
+    <!-- ================= 1. POSTER KUIS CARD ================= -->
+    <div class="form-card overflow-hidden p-3.5 sm:p-4">
+      <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 mb-3">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="image" class="w-4 h-4 text-[#D65A3C]"></i>
+          <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wide">Poster Teka-Teki Kuis</h2>
+        </div>
+        <div class="flex items-center space-x-2.5">
+          <a href="images/poster-detektif-grya.png" download="Poster_Kuis_Detektif_GRYA.png" class="text-[11px] font-bold text-[#D65A3C] hover:underline flex items-center gap-1">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh
+          </a>
+          <span class="text-gray-300">•</span>
+          <span class="text-[10px] text-gray-400 font-medium">Ketuk untuk memperbesar</span>
+        </div>
+      </div>
+
+      <!-- Poster Image with Lightbox Trigger -->
+      <div class="rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer group relative" id="btnZoomPoster">
+        <img src="images/poster-detektif-grya.png" alt="Poster Detektif GRYA" class="w-full h-auto block object-contain">
+        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center">
+          <span class="bg-black/75 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-xs">
+            <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-[#F0D0A0]"></i> Perbesar Poster
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FORM PENDAFTARAN ================= -->
+    <form id="quizForm" novalidate class="space-y-3.5">
+
+      <!-- ================= BERKAS 1: DATA DIRI ================= -->
+      <div class="form-card" id="cardSection1">
+        <div class="flex items-center space-x-2.5 pb-2.5 border-b border-gray-100 mb-3.5">
+          <span class="section-badge">1</span>
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wide text-gray-900">Data Diri Peserta</h2>
+            <p class="text-[11px] text-gray-500">Lengkapi identitas kedinasan Anda</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Nama Lengkap -->
+          <div>
+            <label for="nama" class="form-label">
+              Nama Lengkap <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="nama" name="nama" class="input-custom" placeholder="Nama lengkap Anda" required minlength="3" autocomplete="name">
+              <i data-lucide="user" class="input-icon"></i>
+            </div>
+            <p id="namaError" class="text-xs text-red-600 mt-1 hidden"></p>
+          </div>
+
+          <!-- NIP (18 Digit) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label for="nip" class="form-label mb-0">
+                NIP (18 Digit Angka) <span class="text-red-500">*</span>
+              </label>
+              <span id="nipCounterBadge" class="text-[10px] font-semibold text-gray-500">
+                <span id="nipCounter">0</span>/18 digit
+              </span>
+            </div>
+            <div class="relative">
+              <input type="text" id="nip" name="nip" inputmode="numeric" pattern="[0-9]*" maxlength="18" class="input-custom" placeholder="200001012025061001" required>
+              <i data-lucide="credit-card" class="input-icon"></i>
+            </div>
+            <p id="nipError" class="text-xs text-red-600 mt-1 hidden"></p>
+            <p id="nipDuplicateStatus" class="text-xs text-red-600 mt-1 hidden font-semibold"></p>
+          </div>
+
+          <!-- Unit Organisasi -->
+          <div>
+            <label for="unitOrganisasi" class="form-label">
+              Unit Organisasi <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="unitOrganisasi" name="unitOrganisasi" class="input-custom" placeholder="Sekretariat Jenderal" required>
+              <i data-lucide="building-2" class="input-icon"></i>
+            </div>
+            <p id="unitOrganisasiError" class="text-xs text-red-600 mt-1 hidden"></p>
+          </div>
+
+          <!-- Unit Kerja -->
+          <div>
+            <label for="unitKerja" class="form-label">
+              Unit Kerja <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="unitKerja" name="unitKerja" class="input-custom" placeholder="Biro Komunikasi Publik" required>
+              <i data-lucide="briefcase" class="input-icon"></i>
+            </div>
+            <p id="unitKerjaError" class="text-xs text-red-600 mt-1 hidden"></p>
+          </div>
+
+          <!-- Nomor WhatsApp -->
+          <div>
+            <label for="whatsapp" class="form-label">
+              Nomor WhatsApp <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="tel" id="whatsapp" name="whatsapp" inputmode="tel" class="input-custom" placeholder="081234567890" required autocomplete="tel">
+              <i data-lucide="phone" class="input-icon"></i>
+            </div>
+            <p id="whatsappError" class="text-xs text-red-600 mt-1 hidden"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= BERKAS 2: BUKTI INSTAGRAM STORY ================= -->
+      <div class="form-card" id="cardSection2">
+        <div class="flex items-center space-x-2.5 pb-2.5 border-b border-gray-100 mb-3.5">
+          <span class="section-badge">2</span>
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wide text-gray-900">Bukti Instagram</h2>
+            <p class="text-[11px] text-gray-500">Unggah tangkapan layar story & isi username</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Download Template IG Story -->
+          <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center justify-between gap-2.5">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-amber-100 text-[#D65A3C] flex items-center justify-center flex-shrink-0">
+                <i data-lucide="download" class="w-4 h-4"></i>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-gray-900 leading-tight">Template Instagram Story</p>
+                <p class="text-[10px] text-gray-500 truncate">Unduh bahan untuk dibagikan di Story</p>
+              </div>
+            </div>
+            <a href="downloads/template-instagram-story.png" download="Template_Story_Kuis_PKP.png" id="btnDownloadTemplate" class="flex-shrink-0 text-xs bg-[#D65A3C] hover:bg-[#BA4428] active:scale-[0.98] text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition-all">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh
+            </a>
+          </div>
+
+          <!-- Upload Dropzone -->
+          <div>
+            <label class="form-label">
+              Upload Screenshot Instagram Story <span class="text-red-500">*</span>
+            </label>
+            
+            <input type="file" id="screenshot" name="screenshot" accept="image/jpeg,image/png,image/jpg" class="hidden">
+
+            <!-- Mobile Upload Tap Box -->
+            <div id="uploadDropzone" class="upload-box">
+              <div class="flex flex-col items-center justify-center space-y-1.5 pointer-events-none">
+                <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#D65A3C]">
+                  <i data-lucide="image-plus" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-gray-800">Pilih Foto dari Galeri HP</p>
+                  <p class="text-[11px] text-gray-400 mt-0.5">Format JPG/PNG, maks. 5 MB</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview View -->
+            <div id="previewWrapper" class="hidden mt-2.5">
+              <div class="preview-box">
+                <img id="imagePreview" src="" alt="Bukti Story">
+              </div>
+              <div class="flex items-center justify-between mt-2 px-1">
+                <div class="truncate mr-2">
+                  <span id="fileNameDisplay" class="text-xs font-medium text-gray-700 truncate block"></span>
+                  <span id="fileSizeDisplay" class="text-[10px] text-gray-400 font-mono"></span>
+                </div>
+                <button type="button" id="btnRemoveImage" class="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 flex-shrink-0">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus
+                </button>
+              </div>
+            </div>
+
+            <p id="screenshotError" class="text-xs text-red-600 mt-1 hidden"></p>
+          </div>
+
+          <!-- Checkbox Card Tag Akun -->
+          <label for="checkTag" class="touch-checkbox-card" id="checkTagCard">
+            <input type="checkbox" id="checkTag" name="checkTag" class="checkbox-custom" required>
+            <div class="flex-grow text-xs text-gray-700 leading-snug">
+              Saya sudah membagikan ke Instagram Story dan sudah tag <strong class="text-[#D65A3C]">@kementerianpkp</strong>
+            </div>
+          </label>
+          <p id="checkTagError" class="text-xs text-red-600 -mt-1 hidden px-1"></p>
+
+          <!-- Username Instagram -->
+          <div>
+            <label for="instagram" class="form-label">
+              Username Instagram Peserta <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="instagram" name="instagram" class="input-custom" placeholder="username" required autocomplete="off" autocapitalize="none">
+              <i data-lucide="at-sign" class="input-icon"></i>
+            </div>
+            <p id="instagramError" class="text-xs text-red-600 mt-1 hidden"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= BERKAS 3: KODE QUIZ ================= -->
+      <div id="quizCodeCard" class="form-card">
+        <div class="flex items-center space-x-2.5 pb-2.5 border-b border-gray-100 mb-3.5">
+          <span class="section-badge bg-[#12233F]">3</span>
+          <div>
+            <h2 class="text-xs font-bold uppercase tracking-wide text-gray-900">Kode Quiz Detektif GRYA</h2>
+            <p class="text-[11px] text-gray-500">Masukkan kode rahasia dari hasil kuis</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <!-- Accordion Petunjuk Teka-Teki (Clean Minimalist) -->
+          <div class="bg-gray-50 rounded-xl p-3 border border-gray-200/80">
+            <div class="flex items-center justify-between cursor-pointer" id="clueToggle">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-[#D65A3C]">
+                <i data-lucide="help-circle" class="w-4 h-4"></i>
+                <span>Petunjuk Teka-Teki Majalah</span>
+              </div>
+              <i id="clueChevron" data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform"></i>
+            </div>
+            
+            <div id="clueBody" class="mt-2.5 pt-2 border-t border-gray-200 hidden space-y-2 text-xs text-gray-600 leading-relaxed">
+              <div>
+                <p class="font-bold text-gray-800">1. Dua Petunjuk Tokoh:</p>
+                <p>• Danu memegang kartu program yang diikuti <strong>I Wayan Sudarmo</strong>.</p>
+                <p>• Bima memegang kartu program yang diikuti <strong>Pak Samin</strong>.</p>
+                <p class="text-[11px] text-gray-400 italic">*lihat rubrik Cerita Penerima Bantuan</p>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">2. Susun Posisinya:</p>
+                <p>1. Bima berada di salah satu rumah paling ujung.</p>
+                <p>2. Kartu rusun tidak berada di rumah paling ujung.</p>
+                <p>3. Kartu bedah rumah tepat di sebelah kiri kartu rumah susun.</p>
+                <p>4. Citra tepat di sebelah kanan Ayu.</p>
+                <p>5. Rumah Citra dan Bima tidak berdampingan.</p>
+              </div>
+              <p class="text-[11px] text-[#D65A3C] font-semibold text-center italic">
+                *Masukkan urutan nomor peserta sesuai dengan program di poster
+              </p>
+            </div>
+          </div>
+
+          <!-- Input Kode Quiz -->
+          <div>
+            <label for="kodeQuiz" class="form-label">
+              Kode Rahasia <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="kodeQuiz" name="kodeQuiz" class="input-code" placeholder="KODE RAHASIA" required autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
+            <p id="kodeQuizError" class="text-xs text-red-600 mt-1.5 hidden font-semibold flex items-center gap-1">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-600 flex-shrink-0"></i>
+              <span>Kode belum tepat, coba periksa kembali jawabanmu</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= BERKAS 4: PERSETUJUAN ================= -->
+      <div class="form-card" id="cardSection4">
+        <div class="flex items-center space-x-2 pb-2 border-b border-gray-100 mb-3">
+          <span class="section-badge bg-gray-600">4</span>
+          <h2 class="text-xs font-bold uppercase tracking-wide text-gray-900">Pernyataan &amp; Persetujuan</h2>
+        </div>
+
+        <label for="persetujuan" class="touch-checkbox-card" id="persetujuanCard">
+          <input type="checkbox" id="persetujuan" name="persetujuan" class="checkbox-custom" required>
+          <div class="flex-grow text-xs text-gray-700 leading-snug">
+            Saya menyetujui data saya digunakan untuk keperluan undian dan verifikasi peserta kuis sesuai ketentuan yang berlaku. <span class="text-red-500 font-bold">*</span>
+          </div>
+        </label>
+        <p id="persetujuanError" class="text-xs text-red-600 mt-1 hidden"></p>
+      </div>
+
+      <!-- ================= TOMBOL KIRIM JAWABAN ================= -->
+      <div class="pt-1 pb-4">
+        <button type="submit" id="btnSubmit" class="btn-primary">
+          <span id="btnSubmitText" class="flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4"></i> Kirim Jawaban
+          </span>
+          <div id="btnSpinner" class="hidden spinner"></div>
+        </button>
+        <p class="text-[11px] text-center text-gray-400 mt-2">
+          Satu NIP hanya boleh mengirim satu kali.
+        </p>
+      </div>
+
+    </form>
+
+    <!-- ================= MODAL TANDA TERIMA SUKSES ================= -->
+    <div id="successModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-sm w-full p-5 text-center shadow-xl border border-gray-200 relative max-h-[90vh] overflow-y-auto">
+        
+        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="check" class="w-6 h-6"></i>
+        </div>
+
+        <h3 class="font-serif text-xl font-bold text-gray-900 mb-1">
+          Jawaban Diterima!
+        </h3>
+        <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+          Terima kasih, jawabanmu sudah kami terima! Pemenang akan diumumkan sesuai jadwal.
+        </p>
+
+        <!-- Ticket Receipt View -->
+        <div class="bg-gray-50 rounded-xl p-3.5 mb-4 text-left border border-gray-200 space-y-2 text-xs">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-200 text-gray-400 font-mono text-[10px]">
+            <span>TANDA TERIMA</span>
+            <span id="receiptTime"></span>
+          </div>
+          <div>
+            <span class="text-gray-400 block text-[11px]">Nama:</span>
+            <strong id="receiptNama" class="text-gray-900 block truncate"></strong>
+          </div>
+          <div>
+            <span class="text-gray-400 block text-[11px]">NIP:</span>
+            <span id="receiptNip" class="font-mono text-gray-700"></span>
+          </div>
+          <div class="pt-2 border-t border-dashed border-gray-200 flex items-center justify-between">
+            <div>
+              <span class="text-gray-400 block text-[10px] font-bold">KODE BUKTI:</span>
+              <strong id="receiptKodeUnik" class="text-xl font-mono text-[#D65A3C]"></strong>
+            </div>
+            <button type="button" id="btnCopyCode" class="text-xs bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 shadow-xs">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <a id="btnShareWa" href="#" target="_blank" class="w-full h-10 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs">
+            <i data-lucide="message-circle" class="w-4 h-4"></i> Simpan ke WhatsApp
+          </a>
+          <button type="button" id="btnCloseSuccess" class="w-full h-10 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL PERBESAR POSTER ================= -->
+    <div id="posterModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-xs flex items-center justify-center p-3.5">
+      <div class="bg-white rounded-2xl max-w-lg w-full p-3.5 relative max-h-[92vh] flex flex-col justify-between shadow-2xl">
+        <div class="flex items-center justify-between pb-2 border-b border-gray-200 mb-2">
+          <span class="text-xs font-bold text-gray-800">Poster Kuis Detektif GRYA</span>
+          <button type="button" id="btnClosePosterModal" class="text-gray-400 hover:text-gray-600 p-1">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="overflow-auto max-h-[78vh] rounded-lg bg-gray-900 flex items-center justify-center p-1">
+          <img src="images/poster-detektif-grya.png" alt="Poster Penuh" class="max-w-full h-auto object-contain rounded">
+        </div>
+        <div class="mt-2 text-center flex items-center justify-center gap-2">
+          <a href="images/poster-detektif-grya.png" download="Poster_Kuis_Detektif_GRYA.png" class="text-xs bg-[#D65A3C] hover:bg-[#BA4428] text-white font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 shadow-xs">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh Poster
+          </a>
+          <button type="button" id="btnDismissPosterModal" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="mt-4 text-center text-xs text-gray-500 px-4 py-4 border-t border-gray-200">
+    <div class="max-w-md mx-auto space-y-1">
+      <p class="font-bold text-gray-700 text-[11px]">Kementerian Perumahan dan Kawasan Permukiman</p>
+      <p class="text-[10px] text-gray-400">Biro Komunikasi Publik &copy; 2026</p>
+      <div class="pt-1 flex items-center justify-center space-x-3 text-[11px]">
+        <a href="https://instagram.com/kementerianpkp" target="_blank" rel="noopener noreferrer" class="text-[#D65A3C] hover:underline font-semibold">
+          @kementerianpkp
+        </a>
+        <span class="text-gray-300">•</span>
+        <a href="admin.html" class="text-gray-400 hover:text-gray-600">
+          Admin Panel
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
