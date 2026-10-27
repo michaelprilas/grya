@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #D65A3C;
+  --primary-hover: #C04B2F;
+  --primary-light: #FDF5F2;
+  --primary-ring: rgba(214, 90, 60, 0.18);
+
+  --navy: #12233F;
+  --navy-light: #1D3660;
+
+  --cream: #F0D0A0;
+  --cream-light: #FAF5EB;
+
+  --bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --border: #E2E8F0;
+  --border-focus: #D65A3C;
+  
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --text-sub: #94A3B8;
+
+  --danger: #EF4444;
+  --danger-bg: #FEF2F2;
+  --success: #10B981;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-main);
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+}
+
+.font-serif {
+  font-family: 'DM Serif Display', Georgia, serif;
+}
+
+/* ==========================================================================
+   HEADER HERO (Clean, Balanced Editorial)
+   ========================================================================== */
+.hero-header {
+  background: linear-gradient(150deg, #D65A3C 0%, #BA4428 50%, #943019 100%);
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(214, 90, 60, 0.2);
+}
+
+.hero-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: url('../images/floral-bg.svg') no-repeat right top / 300px;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   CARDS & CONTAINERS (Consistent 16px Grid & 14px Radius)
+   ========================================================================== */
+.form-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(18, 35, 63, 0.02);
+  padding: 18px 16px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+@media (min-width: 640px) {
+  .form-card {
+    padding: 22px 20px;
+    border-radius: 16px;
+  }
+}
+
+.form-card:focus-within {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Section Header Badge */
+.section-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   INPUTS & LABELS (Unified 46px Height, 16px Font, 10px Radius)
+   ========================================================================== */
+.form-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.input-custom {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px 0 40px;
+  font-size: 16px !important; /* CRITICAL: Prevents iOS Safari Auto-Zoom */
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-weight: 500 !important;
+  color: var(--text-main);
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.18s ease;
+  line-height: normal;
+  -webkit-appearance: none;
+}
+
+.input-custom::placeholder {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #94A3B8 !important;
+}
+
+.input-custom:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+.input-custom.error-border {
+  border-color: var(--danger);
+  background-color: var(--danger-bg);
+}
+
+.input-custom.error-border:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.input-icon {
+  position: absolute;
+  left: 13px;
+  top: 15px;
+  width: 16px;
+  height: 16px;
+  color: #94A3B8;
+  pointer-events: none;
+  transition: color 0.18s ease;
+}
+
+.input-custom:focus + .input-icon,
+.relative:focus-within .input-icon {
+  color: var(--primary);
+}
+
+/* Quiz Code Vault Input */
+.input-code {
+  width: 100%;
+  height: 48px;
+  font-family: 'Courier New', Courier, monospace, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  letter-spacing: 6px !important;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: #FFFDF9;
+  border: 1.5px solid #E2D4C3;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.input-code:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+  background: #FFFFFF;
+}
+
+/* ==========================================================================
+   BUTTONS (Primary 48px Height, 11px Radius, Tactile Feel)
+   ========================================================================== */
+.btn-primary {
+  width: 100%;
+  height: 48px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #D65A3C 0%, #BA4428 100%);
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(214, 90, 60, 0.3);
+  transition: all 0.15s ease;
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.985);
+  box-shadow: 0 2px 6px rgba(214, 90, 60, 0.25);
+}
+
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================================
+   CHECKBOX CARD (Comfortable 48px Min-Height, 10px Radius)
+   ========================================================================== */
+.touch-checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background-color: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.touch-checkbox-card:active {
+  transform: scale(0.99);
+}
+
+.touch-checkbox-card.is-checked {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.checkbox-custom {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #94A3B8;
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background-color: #FFFFFF;
+}
+
+.checkbox-custom:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox-custom:checked::before {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #FFFFFF;
+  border-bottom: 2px solid #FFFFFF;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+/* ==========================================================================
+   UPLOAD DROPZONE & PREVIEW (Compact, Clean)
+   ========================================================================== */
+.upload-box {
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  background-color: #FAFAFA;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.upload-box:hover, .upload-box:active {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.preview-box {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 380px;
+  border: 1px solid #CBD5E1;
+  background: #0F172A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-box img {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ==========================================================================
+   SHAKE & SPINNER
+   ========================================================================== */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.shake-it {
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.spinner {
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #FFFFFF;
+  width: 18px;
+  height: 18px;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   ADMIN PANEL REFINED COMPONENTS
+   ========================================================================== */
+.filter-tab-pill {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  background-color: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-tab-pill.active {
+  background-color: var(--navy);
+  color: #FFFFFF;
+  border-color: var(--navy);
+}
+
+.participant-mobile-card {
+  background: #FFFFFF;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+/* Utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  scrollbar-width: none;
+}

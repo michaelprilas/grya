@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>Panel Admin - Kuis Detektif GRYA | Kementerian PKP</title>
+  
+  <link rel="icon" type="image/svg+xml" href="images/logo-pkp.svg">
+  <meta name="theme-color" content="#12233F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pkp: {
+              terracotta: '#D65A3C',
+              'terracotta-dark': '#B54226',
+              'terracotta-light': '#FDF4F1',
+              navy: '#12233F',
+              'navy-dark': '#0A1424',
+              'navy-light': '#1D3660',
+              cream: '#F0D0A0',
+              'cream-light': '#FAF5EB',
+              'cream-dark': '#D4B380'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons & Canvas Confetti -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-900 flex flex-col justify-between">
+
+  <!-- ================= TOP NAV BAR (MOBILE-OPTIMIZED) ================= -->
+  <header class="bg-pkp-navy text-white px-3.5 sm:px-6 py-3 shadow-md sticky top-0 z-40 border-b border-pkp-navy-light">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 bg-white/10 rounded-xl p-1 flex items-center justify-center border border-white/20 flex-shrink-0">
+          <img src="images/logo-pkp.svg" alt="Logo Kementerian PKP" class="w-full h-full object-contain">
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h1 class="text-xs sm:text-sm font-extrabold tracking-tight text-white truncate">
+              Admin Detektif GRYA
+            </h1>
+            <span class="text-[9px] bg-pkp-terracotta text-white px-1.5 py-0.2 rounded font-mono uppercase font-bold flex-shrink-0">
+              PKP
+            </span>
+          </div>
+          <p class="text-[10px] text-gray-300 truncate">Biro Komunikasi Publik</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center space-x-1.5 flex-shrink-0">
+        <a href="index.html" target="_blank" class="text-[11px] text-[#F0D0A0] hover:text-white bg-white/10 active:bg-white/20 px-2.5 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Formulir</span>
+        </a>
+        <button id="btnLogout" class="hidden text-[11px] text-red-200 hover:text-white bg-red-900/60 active:bg-red-800 px-2.5 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Keluar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="max-w-6xl mx-auto px-3.5 sm:px-6 py-5 w-full flex-grow">
+
+    <!-- 1. LOGIN CARD (Mobile Ergonomic) -->
+    <div id="loginSection" class="max-w-sm mx-auto my-8 bg-white rounded-3xl shadow-xl border border-gray-200 p-6 sm:p-8 text-center animate-fade-in">
+      <div class="w-14 h-14 bg-pkp-navy text-[#F0D0A0] rounded-2xl flex items-center justify-center mx-auto mb-3.5 shadow-md">
+        <i data-lucide="lock" class="w-7 h-7"></i>
+      </div>
+      <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 mb-1">Masuk Panel Verifikasi</h2>
+      <p class="text-xs text-gray-500 mb-5 leading-relaxed">Masukkan kata sandi administrator untuk mengelola kuis</p>
+
+      <form id="loginForm" class="space-y-3.5">
+        <div>
+          <div class="relative">
+            <input type="password" id="adminPasswordInput" class="input-custom pl-10" placeholder="Password Admin" required autofocus>
+            <i data-lucide="key" class="w-4 h-4 text-gray-400 absolute left-3.5 top-4 pointer-events-none"></i>
+          </div>
+          <p id="loginError" class="text-xs text-red-600 mt-2 hidden text-left font-bold"></p>
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 text-xs sm:text-sm font-bold">
+          <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Sekarang
+        </button>
+      </form>
+    </div>
+
+    <!-- 2. DASHBOARD CONTENT (Mobile Symmetrical & Clean) -->
+    <div id="dashboardSection" class="hidden space-y-4">
+
+      <!-- Symmetrical Top Stats Grid (Uniform 2x2 on Mobile, 4x1 on Desktop) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+        
+        <!-- Stat Total -->
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200/90 shadow-xs flex items-center space-x-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">Total Peserta</p>
+            <p id="statTotal" class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">0</p>
+          </div>
+        </div>
+
+        <!-- Stat Terverifikasi -->
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200/90 shadow-xs flex items-center space-x-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">Terverifikasi</p>
+            <p id="statVerified" class="text-xl sm:text-2xl font-black text-green-700 leading-tight">0</p>
+          </div>
+        </div>
+
+        <!-- Stat Menunggu -->
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200/90 shadow-xs flex items-center space-x-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">Menunggu</p>
+            <p id="statPending" class="text-xl sm:text-2xl font-black text-amber-700 leading-tight">0</p>
+          </div>
+        </div>
+
+        <!-- Stat Ditolak -->
+        <div class="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200/90 shadow-xs flex items-center space-x-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="x-circle" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">Ditolak</p>
+            <p id="statRejected" class="text-xl sm:text-2xl font-black text-red-700 leading-tight">0</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Unified Mobile Control Bar -->
+      <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+        
+        <!-- Search Input -->
+        <div class="relative">
+          <input type="text" id="searchInput" class="input-custom pl-10 pr-8 py-2.5 text-xs sm:text-sm" placeholder="Cari Nama, NIP, WA, Instagram, Kode...">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-4 pointer-events-none"></i>
+          <button type="button" id="btnClearSearch" class="hidden absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Horizontal Scrollable Status Filter Tabs (App-Like) -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 scrollbar-none" id="statusTabGroup">
+          <button type="button" class="filter-tab-pill active" data-status="Semua">Semua</button>
+          <button type="button" class="filter-tab-pill" data-status="Terverifikasi">Terverifikasi</button>
+          <button type="button" class="filter-tab-pill" data-status="Menunggu Verifikasi">Menunggu</button>
+          <button type="button" class="filter-tab-pill" data-status="Ditolak">Ditolak</button>
+        </div>
+
+        <!-- Mobile Symmetrical Action Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-gray-100">
+          
+          <!-- Tombol Grand: Undi Pemenang -->
+          <button id="btnOpenDrawModal" class="btn-primary py-3 text-xs sm:text-sm font-bold sm:col-span-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 shadow-md">
+            <i data-lucide="trophy" class="w-4 h-4 text-yellow-200"></i> Undi Pemenang
+          </button>
+
+          <!-- Dua Tombol Sekunder yang Sama Lebar -->
+          <div class="grid grid-cols-2 sm:col-span-2 gap-2">
+            <button id="btnExportCsv" class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 font-bold text-xs py-3 px-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 border border-gray-200">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Ekspor CSV
+            </button>
+
+            <button id="btnOpenConfigModal" class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 font-bold text-xs py-3 px-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 border border-gray-200">
+              <i data-lucide="settings" class="w-3.5 h-3.5"></i> Kode Kuis
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= RESPONSIVE PARTICIPANT LIST / CARDS ================= -->
+      
+      <!-- 1. Mobile Cards View (< md) -->
+      <div id="mobileCardsContainer" class="space-y-3 block md:hidden">
+        <!-- Rendered via JavaScript -->
+      </div>
+
+      <!-- 2. Desktop Table View (>= md) -->
+      <div class="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
+                <th class="py-3 px-3.5">Kode &amp; Waktu</th>
+                <th class="py-3 px-3.5">Identitas Peserta</th>
+                <th class="py-3 px-3.5">Unit Kerja</th>
+                <th class="py-3 px-3.5">Kontak</th>
+                <th class="py-3 px-3.5 text-center">Jawaban</th>
+                <th class="py-3 px-3.5 text-center">Bukti Story</th>
+                <th class="py-3 px-3.5 text-center">Status</th>
+                <th class="py-3 px-3.5 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="submissionsTableBody" class="divide-y divide-gray-100">
+              <!-- Rendered via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty State View -->
+      <div id="emptyTableMessage" class="hidden bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-500 shadow-xs">
+        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-400 mb-2">
+          <i data-lucide="inbox" class="w-6 h-6"></i>
+        </div>
+        <p class="font-bold text-sm text-gray-700">Belum Ada Data Peserta</p>
+        <p class="text-xs text-gray-400 mt-0.5">Tidak ada data yang sesuai dengan pencarian atau filter.</p>
+      </div>
+
+    </div>
+
+    <!-- ================= MODAL UNDI PEMENANG (MOBILE COMPACT) ================= -->
+    <div id="drawModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-md flex items-center justify-center p-3.5">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-5 text-center shadow-2xl border-2 border-amber-300 relative max-h-[90vh] overflow-y-auto">
+        <button type="button" id="btnCloseDrawModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2 ring-6 ring-amber-50">
+          <i data-lucide="sparkles" class="w-7 h-7"></i>
+        </div>
+
+        <h3 class="text-lg font-extrabold text-gray-900 mb-0.5">Undian Pemenang Kuis</h3>
+        <p class="text-xs text-gray-500 mb-4">
+          Hanya mengundi dari <strong class="text-green-600">"Terverifikasi"</strong> (<span id="poolCountText" class="font-bold">0</span> orang).
+        </p>
+
+        <!-- Rolling Slot Machine Screen -->
+        <div id="rollingContainer" class="bg-pkp-navy text-white rounded-2xl p-4 mb-4 border border-amber-400/60 shadow-inner flex flex-col items-center justify-center min-h-[120px]">
+          <div id="rollingPlaceholder" class="text-gray-300 text-xs">
+            Ketuk tombol di bawah untuk mengundi
+          </div>
+          <div id="rollingAnimation" class="hidden text-center">
+            <p class="text-[10px] uppercase tracking-widest text-amber-300 font-bold mb-1 animate-pulse">Mengacak Peserta...</p>
+            <p id="rollingName" class="text-xl font-bold font-mono tracking-tight text-white">---</p>
+            <p id="rollingNip" class="text-xs font-mono text-gray-300 mt-1">NIP: ---</p>
+          </div>
+        </div>
+
+        <!-- Winner Reveal Card -->
+        <div id="winnerCard" class="hidden bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-3.5 mb-4 border-2 border-amber-400 text-left space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-amber-200">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+              <i data-lucide="award" class="w-4 h-4 text-amber-600"></i> PEMENANG TERPILIH!
+            </span>
+            <span id="winnerBadgeCode" class="text-xs font-mono font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded"></span>
+          </div>
+          <div>
+            <p class="text-[10px] text-gray-500">Nama Lengkap:</p>
+            <p id="winnerNama" class="text-sm font-extrabold text-gray-900 truncate"></p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <p class="text-[10px] text-gray-500">NIP:</p>
+              <p id="winnerNip" class="font-mono font-semibold text-gray-800 text-[11px]"></p>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-500">Instagram:</p>
+              <p id="winnerIg" class="font-semibold text-pkp-terracotta text-[11px] truncate"></p>
+            </div>
+          </div>
+          <div>
+            <p class="text-[10px] text-gray-500">Unit Organisasi &amp; Kerja:</p>
+            <p id="winnerUnit" class="text-[11px] font-medium text-gray-800 truncate"></p>
+          </div>
+          <div class="pt-2 border-t border-amber-200 flex items-center justify-between">
+            <p id="winnerWa" class="font-mono font-bold text-green-700 text-xs"></p>
+            <a id="winnerWaLink" href="#" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1">
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Hubungi WA
+            </a>
+          </div>
+        </div>
+
+        <!-- Draw Button -->
+        <button id="btnStartDraw" class="btn-primary w-full py-3 text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 shadow-md">
+          <i data-lucide="dice-5" class="w-4 h-4"></i> Acak Pemenang Sekarang
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= MODAL LIHAT SCREENSHOT (LIGHTBOX) ================= -->
+    <div id="imageModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-3.5">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-4 relative max-h-[92vh] flex flex-col justify-between">
+        <div class="flex items-center justify-between pb-2.5 border-b border-gray-200 mb-2.5">
+          <h3 id="imageModalTitle" class="text-xs font-bold text-gray-800 truncate">Bukti Instagram Story</h3>
+          <button type="button" id="btnCloseImageModal" class="text-gray-400 hover:text-gray-600 p-1">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="max-h-[65vh] overflow-auto flex items-center justify-center bg-gray-900 rounded-xl p-1">
+          <img id="imageModalSrc" src="" alt="Bukti Story" class="max-w-full max-h-[63vh] object-contain rounded-lg">
+        </div>
+        <div class="mt-3 text-right">
+          <a id="imageModalDirectLink" href="#" target="_blank" class="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 font-bold">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Buka Foto Asli
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL CONFIG KODE KUIS ================= -->
+    <div id="configModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-3.5">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-5 relative">
+        <button type="button" id="btnCloseConfigModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <h3 class="text-base font-extrabold text-gray-900 mb-1">Kunci Jawaban Kuis</h3>
+        <p class="text-xs text-gray-500 mb-4">Ubah kode kuis rahasia yang dianggap tepat oleh sistem</p>
+
+        <form id="configForm" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+              Kode Rahasia Saat Ini
+            </label>
+            <input type="text" id="newQuizCodeInput" class="input-custom font-mono text-center font-extrabold tracking-widest text-xl" required>
+            <p class="text-[11px] text-gray-500 mt-1">Default pemecahan teka-teki: <strong>2134</strong>.</p>
+          </div>
+
+          <button type="submit" class="btn-primary w-full py-3 text-xs font-bold">
+            Simpan Perubahan
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-white border-t border-gray-200 py-3.5 text-center text-[11px] text-gray-500">
+    <div class="max-w-6xl mx-auto px-4">
+      <p>Panel Admin Kuis Detektif GRYA &copy; 2026 Kementerian Perumahan dan Kawasan Permukiman</p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
