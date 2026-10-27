@@ -37,38 +37,38 @@
 <body class="min-h-screen flex flex-col justify-between">
 
   <!-- ==================== HEADER (CLEAN & ELEGANT) ==================== -->
-  <header class="hero-header text-white pt-5 pb-6 px-4">
-    <div class="w-full max-w-md mx-auto">
+  <header class="hero-header text-white pt-6 pb-8 px-4 sm:px-6">
+    <div class="w-full max-w-5xl mx-auto">
       
       <!-- Top Brand Row -->
-      <div class="flex items-center justify-between gap-2 mb-4">
-        <div class="flex items-center space-x-2 min-w-0 flex-1">
-          <div class="w-8 h-8 bg-white/15 backdrop-blur-md rounded-lg p-1 flex items-center justify-center border border-white/25 flex-shrink-0">
+      <div class="flex items-center justify-between gap-3 mb-5">
+        <div class="flex items-center space-x-2.5 min-w-0 flex-1">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white/15 backdrop-blur-md rounded-xl p-1 sm:p-1.5 flex items-center justify-center border border-white/25 flex-shrink-0">
             <img src="images/logo-pkp.svg" alt="Logo Kementerian PKP" class="w-full h-full object-contain">
           </div>
           <div class="min-w-0 flex-1">
-            <p class="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wide text-[#F0D0A0] leading-tight">Kementerian Perumahan dan Kawasan Permukiman</p>
-            <p class="text-[10.5px] sm:text-xs font-semibold text-white/90 leading-tight mt-0.5">Biro Komunikasi Publik</p>
+            <p class="text-[9px] sm:text-xs font-bold uppercase tracking-wide text-[#F0D0A0] leading-tight">Kementerian Perumahan dan Kawasan Permukiman</p>
+            <p class="text-[11px] sm:text-sm font-semibold text-white/90 leading-tight mt-0.5">Biro Komunikasi Publik</p>
           </div>
         </div>
         
-        <span class="text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider bg-black/25 text-[#F0D0A0] border border-[#F0D0A0]/30 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
+        <span class="text-[8.5px] sm:text-xs font-bold uppercase tracking-wider bg-black/25 text-[#F0D0A0] border border-[#F0D0A0]/30 px-2.5 sm:px-3.5 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
           Majalah GRYA Edisi II
         </span>
       </div>
 
       <!-- Title & Subtitle (Official PNG Wordmark) -->
-      <div class="text-center py-1 flex flex-col items-center justify-center">
+      <div class="text-center py-2 flex flex-col items-center justify-center">
         <h1 class="w-full flex justify-center">
-          <img src="images/title-detektif-grya.png" alt="Detektif GRYA" class="w-56 sm:w-64 max-w-[80vw] h-auto object-contain drop-shadow-md">
+          <img src="images/title-detektif-grya.png" alt="Detektif GRYA" class="w-60 sm:w-72 md:w-84 lg:w-96 max-w-[85vw] h-auto object-contain drop-shadow-md">
         </h1>
-        <p class="font-serif italic text-sm sm:text-base text-[#F0D0A0] mt-1.5 tracking-wide">
+        <p class="font-serif italic text-sm sm:text-lg md:text-xl text-[#F0D0A0] mt-2 tracking-wide">
           Empat Pintu Satu Kode Rahasia
         </p>
       </div>
 
       <!-- Clean Instruction -->
-      <p class="text-xs text-white/90 font-normal leading-relaxed text-center mt-3 max-w-sm mx-auto">
+      <p class="text-xs sm:text-sm text-white/90 font-normal leading-relaxed text-center mt-3 max-w-xl mx-auto">
         Isi form di bawah untuk ikut undian hadiah. Pastikan kode kuis dan bukti Instagram Story sudah benar sebelum mengirim.
       </p>
 
@@ -76,43 +76,63 @@
   </header>
 
   <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
-  <main class="max-w-md mx-auto px-4 -mt-2 relative z-10 w-full flex-grow space-y-3.5">
+  <main class="w-full max-w-5xl mx-auto px-4 sm:px-6 -mt-3 relative z-10 flex-grow space-y-4">
 
     <!-- Global Alert Notification -->
-    <div id="globalAlert" class="hidden p-3.5 rounded-xl text-xs font-medium border flex items-start space-x-2.5 shadow-sm" role="alert">
-      <i id="globalAlertIcon" data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+    <div id="globalAlert" class="hidden p-3.5 sm:p-4 rounded-xl text-xs sm:text-sm font-medium border flex items-start space-x-2.5 shadow-sm" role="alert">
+      <i id="globalAlertIcon" data-lucide="alert-circle" class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5"></i>
       <div id="globalAlertText" class="flex-grow leading-relaxed"></div>
     </div>
 
-    <!-- ================= 1. POSTER KUIS CARD ================= -->
-    <div class="form-card overflow-hidden p-3.5 sm:p-4">
-      <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 mb-3">
-        <div class="flex items-center space-x-2">
-          <i data-lucide="image" class="w-4 h-4 text-[#D65A3C]"></i>
-          <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wide">Poster Teka-Teki Kuis</h2>
+    <!-- Responsive Layout: 1 Column on Mobile, 2 Columns on Desktop (Col 5 Sticky Poster, Col 7 Form) -->
+    <div class="lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start">
+
+      <!-- ================= KOLOM KIRI (STICKY DI DESKTOP): POSTER KUIS ================= -->
+      <div class="lg:col-span-5 mb-4 lg:mb-0 lg:sticky lg:top-4 space-y-3.5">
+        
+        <!-- 1. POSTER KUIS CARD -->
+        <div class="form-card overflow-hidden p-3.5 sm:p-4">
+          <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 mb-3">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="image" class="w-4 h-4 text-[#D65A3C]"></i>
+              <h2 class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide">Poster Teka-Teki Kuis</h2>
+            </div>
+            <div class="flex items-center space-x-2.5">
+              <a href="images/poster-detektif-grya.png" download="Poster_Kuis_Detektif_GRYA.png" class="text-[11px] sm:text-xs font-bold text-[#D65A3C] hover:underline flex items-center gap-1">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh
+              </a>
+              <span class="text-gray-300">•</span>
+              <span class="text-[10px] sm:text-[11px] text-gray-400 font-medium">Ketuk untuk memperbesar</span>
+            </div>
+          </div>
+
+          <!-- Poster Image with Lightbox Trigger -->
+          <div class="rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer group relative" id="btnZoomPoster">
+            <img src="images/poster-detektif-grya.png" alt="Poster Detektif GRYA" class="w-full h-auto block object-contain">
+            <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center">
+              <span class="bg-black/75 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-xs">
+                <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-[#F0D0A0]"></i> Perbesar Poster
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center space-x-2.5">
-          <a href="images/poster-detektif-grya.png" download="Poster_Kuis_Detektif_GRYA.png" class="text-[11px] font-bold text-[#D65A3C] hover:underline flex items-center gap-1">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh
-          </a>
-          <span class="text-gray-300">•</span>
-          <span class="text-[10px] text-gray-400 font-medium">Ketuk untuk memperbesar</span>
+
+        <!-- Kartu Bantuan Petunjuk (Khusus Desktop) -->
+        <div class="hidden lg:block bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4 text-xs text-amber-950 space-y-2">
+          <div class="flex items-center gap-2 font-bold text-[#D65A3C]">
+            <i data-lucide="help-circle" class="w-4 h-4"></i>
+            <span>Petunjuk Detektif</span>
+          </div>
+          <p class="text-[11px] text-gray-600 leading-relaxed">
+            Perhatikan urutan 4 rumah di poster (Bedah Rumah, FLPP, Rusun, KPP). Pasangkan tokoh peserta sesuai rumahnya untuk menemukan 4 digit kode kuis rahasia!
+          </p>
         </div>
+
       </div>
 
-      <!-- Poster Image with Lightbox Trigger -->
-      <div class="rounded-xl overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer group relative" id="btnZoomPoster">
-        <img src="images/poster-detektif-grya.png" alt="Poster Detektif GRYA" class="w-full h-auto block object-contain">
-        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center">
-          <span class="bg-black/75 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-xs">
-            <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-[#F0D0A0]"></i> Perbesar Poster
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ================= FORM PENDAFTARAN ================= -->
-    <form id="quizForm" novalidate class="space-y-3.5">
+      <!-- ================= KOLOM KANAN: FORM PENDAFTARAN ================= -->
+      <div class="lg:col-span-7">
+        <form id="quizForm" novalidate class="space-y-3.5 sm:space-y-4">
 
       <!-- ================= BERKAS 1: DATA DIRI ================= -->
       <div class="form-card" id="cardSection1">
@@ -368,7 +388,9 @@
         </p>
       </div>
 
-    </form>
+      </form>
+      </div><!-- /lg:col-span-7 -->
+    </div><!-- /lg:grid -->
 
     <!-- ================= MODAL TANDA TERIMA SUKSES ================= -->
     <div id="successModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
@@ -447,8 +469,8 @@
   </main>
 
   <!-- ==================== FOOTER ==================== -->
-  <footer class="mt-4 text-center text-xs text-gray-500 px-4 py-4 border-t border-gray-200">
-    <div class="max-w-md mx-auto space-y-1">
+  <footer class="mt-8 text-center text-xs text-gray-500 px-4 py-6 border-t border-gray-200">
+    <div class="max-w-5xl mx-auto space-y-1.5">
       <p class="font-bold text-gray-700 text-[11px]">Kementerian Perumahan dan Kawasan Permukiman</p>
       <p class="text-[10px] text-gray-400">Biro Komunikasi Publik &copy; 2026</p>
       <div class="pt-1 flex items-center justify-center space-x-3 text-[11px]">
