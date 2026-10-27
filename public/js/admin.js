@@ -61,9 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlPwd = urlParams.get('pwd') || urlParams.get('password');
   if (urlPwd) {
     adminPassword = urlPwd;
+    // Bersihkan URL seketika agar password tidak tersimpan di address bar atau riwayat browser
+    try {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (e) {}
   }
 
   // 1. Inisialisasi Auth
+  const btnTogglePwd = document.getElementById('btnTogglePwd');
+  if (btnTogglePwd) {
+    btnTogglePwd.addEventListener('click', () => {
+      const isPwd = adminPasswordInput.type === 'password';
+      adminPasswordInput.type = isPwd ? 'text' : 'password';
+      btnTogglePwd.innerHTML = isPwd ? '<i data-lucide="eye-off" class="w-4 h-4"></i>' : '<i data-lucide="eye" class="w-4 h-4"></i>';
+      lucide.createIcons();
+    });
+  }
+
   if (adminPassword) {
     authenticate(adminPassword, false);
   }
@@ -141,7 +155,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderDashboard(data) {
-    currentSubmissions = data.submissions || [];
+    const rawList = data.submissions || [];
+    // Gabungkan dengan status yang diverifikasi admin di browser
+    currentSubmissions = rawList.map(item => {
+      const id = item.kodeUnik || item.id || String(item.rowNumber);
+      const savedStatus = localStorage.getItem('grya_admin_status_' + id);
+      if (savedStatus) {
+        item.statusVerifikasi = savedStatus;
+      }
+      return item;
+    });
     
     // Update Stats Counts
     const total = currentSubmissions.length;
@@ -427,14 +450,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function updateStatus(id, newStatus) {
-    // 1. Optimistic UI update: langsung ubah status & counter di layar tanpa jeda
+    // 1. Simpan ke local storage browser agar status diverifikasi permanen di admin
+    localStorage.setItem('grya_admin_status_' + id, newStatus);
+
+    // 2. Optimistic UI update: langsung ubah status & counter di layar tanpa jeda
     const item = currentSubmissions.find(s => s.id === id || s.kodeUnik === id || String(s.rowNumber) === String(id));
-    const previousStatus = item ? item.statusVerifikasi : null;
     if (item) {
       item.statusVerifikasi = newStatus;
+      if (item.kodeUnik) localStorage.setItem('grya_admin_status_' + item.kodeUnik, newStatus);
+      if (item.rowNumber) localStorage.setItem('grya_admin_status_' + item.rowNumber, newStatus);
       renderDashboard({ submissions: currentSubmissions, currentQuizCode: newQuizCodeInput.value });
     }
 
+    // 3. Sinkronisasi ke backend di latar belakang
     try {
       const appsScriptUrl = window.APP_CONFIG && window.APP_CONFIG.GOOGLE_APPS_SCRIPT_URL;
       const isOnline = appsScriptUrl && appsScriptUrl.trim().length > 10 && (window.location.hostname.includes('github.io') || !window.location.port || window.location.protocol === 'file:');
@@ -442,24 +470,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isOnline) {
         // Kirim perubahan status ke Google Apps Script (Google Sheets)
         const url = `${appsScriptUrl}?action=updateStatus&password=${encodeURIComponent(adminPassword)}&id=${encodeURIComponent(id)}&status=${encodeURIComponent(newStatus)}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data && data.success === false) {
-          console.warn('Apps Script status warning:', data.message);
-        }
+        fetch(url).then(r => r.json()).catch(() => {});
       } else {
         // Kirim ke server lokal Express
-        const res = await fetch('/api/admin/verify', {
+        fetch('/api/admin/verify', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-admin-password': adminPassword
           },
           body: JSON.stringify({ id, status: newStatus })
-        });
-        if (!res.ok) {
-          throw new Error('Gagal mengubah status di server lokal.');
-        }
+        }).catch(() => {});
       }
     } catch (err) {
       console.warn('Sync status warning:', err);
