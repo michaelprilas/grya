@@ -248,16 +248,58 @@ document.addEventListener('DOMContentLoaded', () => {
       : sizeInKb + ' KB';
     fileSizeDisplay.textContent = sizeFormatted;
 
-    // Baca ke FileReader untuk preview & base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imagePreview.src = e.target.result;
-      selectedFileBase64 = e.target.result;
+    // Kompresi otomatis di browser agar upload ke Google Drive super cepat dan ringan
+    compressImage(file).then((dataUrl) => {
+      imagePreview.src = dataUrl;
+      selectedFileBase64 = dataUrl;
       uploadDropzone.classList.add('hidden');
       previewWrapper.classList.remove('hidden');
       lucide.createIcons();
-    };
-    reader.readAsDataURL(file);
+    }).catch((err) => {
+      console.warn('Fallback kompresi gambar:', err);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.src = e.target.result;
+        selectedFileBase64 = e.target.result;
+        uploadDropzone.classList.add('hidden');
+        previewWrapper.classList.remove('hidden');
+        lucide.createIcons();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Kompresi gambar client-side (Max 1200px, JPEG quality 0.75)
+  function compressImage(file, maxDimension = 1200, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   btnRemoveImage.addEventListener('click', () => {
@@ -564,7 +606,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (error) {
       console.error('Submission error:', error);
-      showGlobalAlert('Terjadi gangguan koneksi saat mengirim jawaban. Pastikan internet Anda aktif dan coba lagi.', true);
+      const errDetail = error && error.message ? ` (${error.message})` : '';
+      showGlobalAlert('Gagal mengirim data' + errDetail + '. Pastikan koneksi internet aktif dan silakan coba lagi.', true);
     } finally {
       setSubmittingState(false);
     }
