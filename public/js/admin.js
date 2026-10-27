@@ -427,25 +427,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function updateStatus(id, newStatus) {
-    try {
-      const res = await fetch('/api/admin/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': adminPassword
-        },
-        body: JSON.stringify({ id, status: newStatus })
-      });
+    // 1. Optimistic UI update: langsung ubah status & counter di layar tanpa jeda
+    const item = currentSubmissions.find(s => s.id === id || s.kodeUnik === id || String(s.rowNumber) === String(id));
+    const previousStatus = item ? item.statusVerifikasi : null;
+    if (item) {
+      item.statusVerifikasi = newStatus;
+      renderDashboard({ submissions: currentSubmissions, currentQuizCode: newQuizCodeInput.value });
+    }
 
-      if (res.ok) {
-        const item = currentSubmissions.find(s => s.id === id || s.kodeUnik === id);
-        if (item) item.statusVerifikasi = newStatus;
-        loadData();
+    try {
+      const appsScriptUrl = window.APP_CONFIG && window.APP_CONFIG.GOOGLE_APPS_SCRIPT_URL;
+      const isOnline = appsScriptUrl && appsScriptUrl.trim().length > 10 && (window.location.hostname.includes('github.io') || !window.location.port || window.location.protocol === 'file:');
+
+      if (isOnline) {
+        // Kirim perubahan status ke Google Apps Script (Google Sheets)
+        const url = `${appsScriptUrl}?action=updateStatus&password=${encodeURIComponent(adminPassword)}&id=${encodeURIComponent(id)}&status=${encodeURIComponent(newStatus)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.success === false) {
+          console.warn('Apps Script status warning:', data.message);
+        }
       } else {
-        alert('Gagal mengubah status.');
+        // Kirim ke server lokal Express
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ id, status: newStatus })
+        });
+        if (!res.ok) {
+          throw new Error('Gagal mengubah status di server lokal.');
+        }
       }
     } catch (err) {
-      alert('Kesalahan koneksi saat mengubah status.');
+      console.warn('Sync status warning:', err);
     }
   }
 

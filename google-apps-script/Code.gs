@@ -324,6 +324,59 @@ function doGet(e) {
       return jsonResponse({ success: true, submissions: list });
     }
 
+    // Admin API untuk mengubah status verifikasi di Google Sheets
+    if (action === "updateStatus") {
+      const pwd = e.parameter.password || "";
+      if (pwd !== CONFIG.ADMIN_PASSWORD) {
+        return jsonResponse({ success: false, message: "Akses ditolak: Password admin salah." });
+      }
+      const targetId = (e.parameter.id || "").trim();
+      const newStatus = (e.parameter.status || "").trim();
+      const allowed = ["Menunggu Verifikasi", "Terverifikasi", "Ditolak"];
+      if (!allowed.includes(newStatus)) {
+        return jsonResponse({ success: false, message: "Status tidak valid." });
+      }
+
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+      if (!sheet || sheet.getLastRow() <= 1) {
+        return jsonResponse({ success: false, message: "Data spreadsheet masih kosong." });
+      }
+
+      const lastRow = sheet.getLastRow();
+      let targetRow = -1;
+
+      // Cari berdasarkan Kode Unik di Kolom B (kolom 2)
+      const codeColumn = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+      for (let i = 0; i < codeColumn.length; i++) {
+        if (String(codeColumn[i][0]).trim().toUpperCase() === targetId.toUpperCase()) {
+          targetRow = i + 2;
+          break;
+        }
+      }
+
+      // Jika tidak ditemukan dengan kode unik, cari berdasarkan rowNumber
+      if (targetRow === -1) {
+        const rowNum = parseInt(targetId, 10);
+        if (!isNaN(rowNum) && rowNum >= 2 && rowNum <= lastRow) {
+          targetRow = rowNum;
+        }
+      }
+
+      if (targetRow !== -1) {
+        // Kolom J (kolom 10) adalah Status Verifikasi
+        sheet.getRange(targetRow, 10).setValue(newStatus);
+        return jsonResponse({
+          success: true,
+          message: "Status berhasil diubah menjadi: " + newStatus,
+          id: targetId,
+          status: newStatus
+        });
+      } else {
+        return jsonResponse({ success: false, message: "Peserta tidak ditemukan di baris data." });
+      }
+    }
+
     // Default status ping
     return jsonResponse({
       status: "online",
