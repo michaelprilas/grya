@@ -467,10 +467,9 @@ document.addEventListener('DOMContentLoaded', () => {
           screenshotBase64: selectedFileBase64
         };
 
+        // Menggunakan text/plain agar tidak memicu CORS Preflight OPTIONS di Apps Script
         const response = await fetch(appsScriptUrl, {
           method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
@@ -480,6 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // ========================================================
         // MODE B: KIRIM KE LOCAL NODE.JS BACKEND (/api/submit)
         // ========================================================
+        if (window.location.hostname.includes('github.io')) {
+          showGlobalAlert('Backend Google Apps Script belum diisi di js/config.js. Hubungkan URL Web App agar data kuis tersimpan di Google Sheets.', true);
+          return;
+        }
+
         const formData = new FormData();
         formData.append('nama', namaInput.value.trim());
         formData.append('nip', cleanNip);
