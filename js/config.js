@@ -7,7 +7,7 @@ window.APP_CONFIG = {
   // Ganti dengan URL Google Apps Script Web App jika ingin langsung menyimpan ke Google Sheets & Google Drive
   // Contoh: "https://script.google.com/macros/s/AKfycbx.../exec"
   // Jika dibiarkan kosong (""), website otomatis menggunakan local backend server (Node.js Express di /api/submit)
-  GOOGLE_APPS_SCRIPT_URL: "",
+  GOOGLE_APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycby5DMbTO3Jy5hjhttyna01if0y_1-z6xJ92RktcA8KinTPvBusd08mCArEl0j1NDojs/exec",
 
   // KODE KUIS RAHASIA YANG BENAR
   // Sesuai petunjuk teka-teki:
