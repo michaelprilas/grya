@@ -111,7 +111,7 @@ function doPost(e) {
     let whatsapp = (data.whatsapp || "").replace(/\D/g, "");
     const alamat = (data.alamat || data.alamatPengiriman || data.unitKerja || "").trim();
     let instagram = (data.instagram || "").trim();
-    const kodeQuiz = (data.kodeQuiz || "").trim().toUpperCase().replace(/[\s-]/g, "");
+    const kodeQuiz = (data.kodeQuiz || "").trim().toUpperCase().replace(/[\s-]/g, "") || "2134";
 
     // 2. Validasi Server-Side
     if (!nama || nama.length < 3) {
@@ -154,25 +154,21 @@ function doPost(e) {
       sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
     }
 
-    // 4. Deteksi Header Kolom di Spreadsheet
+    // 4. Deteksi Header Kolom di Spreadsheet (Dinamis)
     const lastRow = sheet.getLastRow();
     const lastCol = Math.max(sheet.getLastColumn(), 6);
-    const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim().toLowerCase());
     
+    // Cari kolom WhatsApp untuk anti-duplikasi
     let waColIndex = 4;
-    let isLegacySheet = false;
-
     for (let c = 0; c < headerRow.length; c++) {
-      const h = String(headerRow[c]).toLowerCase();
-      if (h.includes("whatsapp")) {
+      if (headerRow[c].includes("whatsapp")) {
         waColIndex = c + 1;
-      }
-      if (h.includes("nip") || h.includes("unit kerja")) {
-        isLegacySheet = true;
+        break;
       }
     }
 
-    // 5. Cek Duplikasi WhatsApp
+    // Cek Duplikasi WhatsApp
     if (lastRow > 1) {
       const waList = sheet.getRange(2, waColIndex, lastRow - 1, 1)
         .getValues()
@@ -187,7 +183,7 @@ function doPost(e) {
       }
     }
 
-    // 6. Simpan Screenshot ke Google Drive (jika ada)
+    // 5. Simpan Screenshot ke Google Drive (jika ada)
     let screenshotUrl = "-";
     if (data.screenshotBase64) {
       try {
@@ -218,45 +214,34 @@ function doPost(e) {
       }
     }
 
-    // 7. Buat Kode Unik Bukti Peserta (Format: GRYA-XXXX)
+    // 6. Buat Kode Unik Bukti Peserta (Format: GRYA-XXXX)
     const randomHex = Math.floor(1000 + Math.random() * 9000);
     const uniqueCode = "GRYA-" + randomHex;
     const timestamp = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss");
     const statusVerifikasi = "Menunggu Verifikasi";
 
-    // 8. Simpan Baris Data ke Spreadsheet
-    if (isLegacySheet && !headerRow.some(h => String(h).toLowerCase().includes("alamat"))) {
-      // Kompatibilitas dengan struktur sheet lama:
-      // Timestamp, Kode Unik, Nama, NIP, Unit Organisasi, Unit Kerja (diisi Alamat), WhatsApp, IG, Kode, Status, Bukti
-      sheet.appendRow([
-        timestamp,
-        uniqueCode,
-        nama,
-        "'" + ('000000' + whatsapp).slice(-18),
-        "Alamat Pengiriman",
-        alamat, // Disimpan di kolom Unit Kerja
-        "'" + whatsapp,
-        instagram || "-",
-        kodeQuiz || "2134",
-        statusVerifikasi,
-        screenshotUrl
-      ]);
-    } else {
-      // Format Lengkap Edisi II:
-      sheet.appendRow([
-        timestamp,
-        uniqueCode,
-        nama,
-        "'" + whatsapp,
-        alamat,
-        instagram || "-",
-        kodeQuiz || "2134",
-        statusVerifikasi,
-        screenshotUrl
-      ]);
+    // 7. Simpan Baris Data Secara Cerdas Sesuai Header Kolom yang Ada di Sheet
+    const newRow = new Array(headerRow.length).fill("");
+
+    for (let c = 0; c < headerRow.length; c++) {
+      const h = headerRow[c];
+      if (h.includes("timestamp")) newRow[c] = timestamp;
+      else if (h.includes("kode unik")) newRow[c] = uniqueCode;
+      else if (h.includes("nama")) newRow[c] = nama;
+      else if (h.includes("whatsapp")) newRow[c] = "'" + whatsapp;
+      else if (h.includes("alamat")) newRow[c] = alamat;
+      else if (h.includes("instagram")) newRow[c] = instagram || "-";
+      else if (h.includes("quiz") || h.includes("kode")) newRow[c] = kodeQuiz;
+      else if (h.includes("status")) newRow[c] = statusVerifikasi;
+      else if (h.includes("screenshot") || h.includes("bukti")) newRow[c] = screenshotUrl;
+      else if (h.includes("unit kerja")) newRow[c] = alamat;
+      else if (h.includes("unit organisasi")) newRow[c] = "Alamat Pengiriman";
+      else if (h.includes("nip")) newRow[c] = "'" + ('000000' + whatsapp).slice(-18);
     }
 
-    // 9. Respon Sukses
+    sheet.appendRow(newRow);
+
+    // 8. Respon Sukses
     return jsonResponse({
       success: true,
       message: "Terima kasih, jawaban kuis Anda sudah kami terima! Pemenang akan diumumkan sesuai jadwal.",
@@ -347,7 +332,7 @@ function doGet(e) {
           else if (h.includes("whatsapp")) item.whatsapp = String(val).replace(/'/g, "");
           else if (h.includes("alamat")) item.alamat = val;
           else if (h.includes("instagram")) item.instagram = val;
-          else if (h.includes("quiz") || h.includes("kode rahasia")) item.kodeQuiz = val;
+          else if (h.includes("quiz") || h.includes("kode")) item.kodeQuiz = val;
           else if (h.includes("status")) item.statusVerifikasi = val;
           else if (h.includes("unit kerja")) item.unitKerja = val;
           else if (h.includes("unit organisasi")) item.unitOrganisasi = val;
@@ -355,13 +340,22 @@ function doGet(e) {
           else if (h.includes("screenshot") || h.includes("bukti")) item.linkScreenshot = val;
         });
 
-        // Fallback alamat jika di sheet lama tersimpan di unit kerja
-        if (!item.alamat) {
-          if (item.unitKerja && item.unitOrganisasi === "Alamat Pengiriman") {
-            item.alamat = item.unitKerja;
-          } else if (item.unitKerja) {
-            item.alamat = item.unitKerja;
+        // Fallbacks pintar jika kolom sempat bergeser
+        if (!item.whatsapp && item.nip) {
+          const cleanNip = String(item.nip).replace(/\D/g, '').replace(/^0+/, '');
+          if (cleanNip.length >= 10 && cleanNip.length <= 15) {
+            item.whatsapp = cleanNip.startsWith('8') ? '62' + cleanNip : cleanNip;
           }
+        }
+        if (!item.alamat) {
+          if (item.unitKerja && item.unitKerja !== "Menunggu Verifikasi") item.alamat = item.unitKerja;
+          else if (item.unitOrganisasi && item.unitOrganisasi !== "Alamat Pengiriman") item.alamat = item.unitOrganisasi;
+        }
+        if (!item.statusVerifikasi) {
+          item.statusVerifikasi = "Menunggu Verifikasi";
+        }
+        if (!item.kodeQuiz) {
+          item.kodeQuiz = "2134";
         }
 
         submissions.push(item);

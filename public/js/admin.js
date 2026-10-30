@@ -134,23 +134,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ==========================================
+  // SMART FIELD EXTRACTORS (Resilien & Lengkap)
+  // ==========================================
+  function getItemWhatsApp(item) {
+    if (item.whatsapp && String(item.whatsapp).trim().length > 0) {
+      return String(item.whatsapp).trim();
+    }
+    // Jika nomor WA masuk ke kolom NIP (kasus baris transisi)
+    if (item.nip && String(item.nip).trim().length > 0) {
+      let clean = String(item.nip).replace(/\D/g, '');
+      clean = clean.replace(/^0+/, ''); // Buang leading zeros (e.g. 000000628...)
+      if (clean.startsWith('8')) clean = '62' + clean;
+      if (clean.length >= 10 && clean.length <= 15) return clean;
+    }
+    return item.whatsapp || '-';
+  }
+
   function getItemAlamat(item) {
     if (item.alamat && item.alamat.trim()) return item.alamat.trim();
     if (item.alamatPengiriman && item.alamatPengiriman.trim()) return item.alamatPengiriman.trim();
     if (item.unitKerja && item.unitOrganisasi === 'Alamat Pengiriman') return item.unitKerja.trim();
-    if (item.unitOrganisasi && item.unitKerja) return `${item.unitOrganisasi} — ${item.unitKerja}`;
-    return item.unitKerja || item.unitOrganisasi || '-';
+    if (item.unitKerja && item.unitKerja.trim() && item.unitKerja !== 'Menunggu Verifikasi') return item.unitKerja.trim();
+    if (item.unitOrganisasi && item.unitOrganisasi.trim() && item.unitOrganisasi !== 'Alamat Pengiriman') return item.unitOrganisasi.trim();
+    return '-';
+  }
+
+  function getItemKodeQuiz(item) {
+    if (item.kodeQuiz && String(item.kodeQuiz).trim().length > 0) return String(item.kodeQuiz).trim();
+    if (item.kode && String(item.kode).trim().length > 0) return String(item.kode).trim();
+    return '2134';
+  }
+
+  function getItemScreenshot(item) {
+    const src = item.screenshotUrl || item.linkScreenshot || item.screenshot || '';
+    if (!src || src === '-' || src.trim() === '') return '';
+    return src.trim();
+  }
+
+  function getItemStatus(item) {
+    const id = item.kodeUnik || item.id || String(item.rowNumber);
+    const saved = localStorage.getItem('grya_admin_status_' + id);
+    if (saved) return saved;
+    return item.statusVerifikasi || 'Menunggu Verifikasi';
   }
 
   // 2. Fetch & Render Data
   function renderDashboard(data) {
     const rawList = data.submissions || [];
     currentSubmissions = rawList.map(item => {
-      const id = item.kodeUnik || item.id || String(item.rowNumber);
-      const savedStatus = localStorage.getItem('grya_admin_status_' + id);
-      if (savedStatus) {
-        item.statusVerifikasi = savedStatus;
-      }
+      item.statusVerifikasi = getItemStatus(item);
+      item.whatsapp = getItemWhatsApp(item);
+      item.alamat = getItemAlamat(item);
+      item.kodeQuiz = getItemKodeQuiz(item);
+      item.screenshotUrl = getItemScreenshot(item);
       return item;
     });
     
@@ -209,14 +246,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let filtered = currentSubmissions.filter(item => {
       const matchStatus = (selectedStatus === 'Semua') || (item.statusVerifikasi === selectedStatus);
       const alamatText = getItemAlamat(item).toLowerCase();
+      const waText = getItemWhatsApp(item).toLowerCase();
+      const quizText = getItemKodeQuiz(item).toLowerCase();
       const matchQuery = !query || 
         (item.nama && item.nama.toLowerCase().includes(query)) ||
-        (item.whatsapp && item.whatsapp.includes(query)) ||
+        waText.includes(query) ||
         (item.kodeUnik && item.kodeUnik.toLowerCase().includes(query)) ||
-        (item.kodeQuiz && String(item.kodeQuiz).includes(query)) ||
+        quizText.includes(query) ||
         (item.instagram && item.instagram.toLowerCase().includes(query)) ||
-        alamatText.includes(query) ||
-        (item.nip && item.nip.includes(query));
+        alamatText.includes(query);
 
       return matchStatus && matchQuery;
     });
@@ -254,10 +292,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusPill = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800"><i data-lucide="clock" class="w-3 h-3"></i> Menunggu</span>';
       }
 
-      const waNumber = (item.whatsapp || '').replace(/\D/g, '');
-      const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20Perumahan%20dan%20Kawasan%20Permukiman%20(PKP)%20terkait%20undian%20Majalah%20GRYA...`;
+      const waDisplay = getItemWhatsApp(item);
+      const waNumber = waDisplay.replace(/\D/g, '');
+      const waUrl = waNumber ? `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20Perumahan%20dan%20Kawasan%20Permukiman%20(PKP)%20terkait%20undian%20Majalah%20GRYA...` : '#';
       const alamat = getItemAlamat(item);
-      const photoSrc = item.screenshotUrl || item.linkScreenshot || '';
+      const kodeQuiz = getItemKodeQuiz(item);
+      const photoSrc = getItemScreenshot(item);
 
       card.innerHTML = `
         <!-- Card Header: Kode & Status -->
@@ -274,12 +314,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- Card Body: Identitas & Alamat -->
         <div>
           <h4 class="text-sm font-extrabold text-gray-900 leading-tight">${escapeHtml(item.nama || '-')}</h4>
-          <div class="flex items-center gap-2 mt-1">
+          <div class="flex items-center gap-2 mt-1.5 flex-wrap">
             <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 text-xs active:bg-green-100">
-              <i data-lucide="message-circle" class="w-3 h-3"></i> ${escapeHtml(item.whatsapp || '-')}
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> ${escapeHtml(waDisplay)}
             </a>
             ${item.instagram && item.instagram !== '-' ? `
-              <span class="text-[11px] text-gray-500 font-medium">IG: <strong>${escapeHtml(item.instagram)}</strong></span>
+              <span class="text-xs text-pink-700 font-bold bg-pink-50 px-2 py-0.5 rounded-lg border border-pink-200 flex items-center gap-1">
+                <i data-lucide="instagram" class="w-3 h-3"></i> ${escapeHtml(item.instagram)}
+              </span>
             ` : ''}
           </div>
           <div class="flex items-start gap-1.5 text-xs text-gray-700 mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
@@ -292,8 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="flex items-center justify-between text-xs pt-0.5">
           <div class="flex items-center gap-1.5">
             <span class="text-[10px] text-gray-500 font-semibold">Kode Kuis:</span>
-            <span class="font-mono font-bold text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-300">
-              ${escapeHtml(item.kodeQuiz || '-')}
+            <span class="font-mono font-bold text-xs bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded border border-gray-300">
+              ${escapeHtml(kodeQuiz)}
             </span>
           </div>
         </div>
@@ -304,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="btn-view-image w-full py-2 bg-blue-50 active:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-blue-200" data-src="${escapeHtml(photoSrc)}" data-nama="${escapeHtml(item.nama)}">
               <i data-lucide="image" class="w-3.5 h-3.5"></i> Periksa Bukti Instagram Story
             </button>
-          ` : ''}
+          ` : '<p class="text-[11px] text-gray-400 text-center italic">Bukti story tidak diunggah</p>'}
 
           <div class="grid grid-cols-3 gap-1.5">
             <button type="button" class="btn-status-verify py-2 rounded-xl text-[11px] font-bold text-white bg-green-600 active:bg-green-700 flex items-center justify-center gap-1 shadow-xs" data-id="${escapeHtml(item.id || item.kodeUnik)}">
@@ -343,10 +385,12 @@ document.addEventListener('DOMContentLoaded', () => {
         statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">Menunggu</span>';
       }
 
-      const waNumber = (item.whatsapp || '').replace(/\D/g, '');
-      const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20PKP...`;
+      const waDisplay = getItemWhatsApp(item);
+      const waNumber = waDisplay.replace(/\D/g, '');
+      const waUrl = waNumber ? `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20PKP...` : '#';
       const alamat = getItemAlamat(item);
-      const photoSrc = item.screenshotUrl || item.linkScreenshot || '';
+      const kodeQuiz = getItemKodeQuiz(item);
+      const photoSrc = getItemScreenshot(item);
 
       tr.innerHTML = `
         <td class="py-3 px-3.5 whitespace-nowrap">
@@ -361,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3.5 whitespace-nowrap">
           <a href="${waUrl}" target="_blank" class="text-green-600 hover:text-green-800 font-mono text-xs flex items-center gap-1 font-semibold">
-            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> ${escapeHtml(item.whatsapp || '-')}
+            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> ${escapeHtml(waDisplay)}
           </a>
         </td>
         <td class="py-3 px-3.5 max-w-xs">
@@ -369,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3.5 text-center whitespace-nowrap">
           <span class="font-mono font-bold text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-200">
-            ${escapeHtml(item.kodeQuiz || '-')}
+            ${escapeHtml(kodeQuiz)}
           </span>
         </td>
         <td class="py-3 px-3.5 text-center whitespace-nowrap">
@@ -492,7 +536,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const interval = setInterval(() => {
       const tempWinner = verified[Math.floor(Math.random() * verified.length)];
       rollingName.textContent = tempWinner.nama;
-      if (rollingWa) rollingWa.textContent = `WA: ${tempWinner.whatsapp}`;
+      const tempWa = getItemWhatsApp(tempWinner);
+      if (rollingWa) rollingWa.textContent = `WA: ${tempWa}`;
       rollCount++;
 
       if (rollCount >= maxRolls) {
@@ -514,12 +559,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const alamat = getItemAlamat(finalWinner);
+    const waDisplay = getItemWhatsApp(finalWinner);
     document.getElementById('winnerNama').textContent = finalWinner.nama;
-    document.getElementById('winnerWaNumber').textContent = finalWinner.whatsapp;
+    document.getElementById('winnerWaNumber').textContent = waDisplay;
     document.getElementById('winnerAlamat').textContent = alamat;
     document.getElementById('winnerBadgeCode').textContent = finalWinner.kodeUnik;
 
-    const waNumber = (finalWinner.whatsapp || '').replace(/\D/g, '');
+    const waNumber = waDisplay.replace(/\D/g, '');
     const waText = `Halo Selamat ${encodeURIComponent(finalWinner.nama)}! Anda terpilih sebagai Pemenang Undian Kuis Detektif GRYA (Kementerian PKP) dengan Kode Bukti: ${finalWinner.kodeUnik}. Hadiah akan segera dikirimkan ke alamat Anda: ${encodeURIComponent(alamat)}.`;
     document.getElementById('winnerWaLink').href = `https://wa.me/${waNumber}?text=${waText}`;
 
@@ -569,12 +615,12 @@ document.addEventListener('DOMContentLoaded', () => {
       `"${item.timestamp || ''}"`,
       `"${item.kodeUnik || ''}"`,
       `"${(item.nama || '').replace(/"/g, '""')}"`,
-      `"'${item.whatsapp || ''}"`,
+      `"'${getItemWhatsApp(item)}"`,
       `"${getItemAlamat(item).replace(/"/g, '""')}"`,
       `"${item.instagram || ''}"`,
-      `"${item.kodeQuiz || ''}"`,
+      `"${getItemKodeQuiz(item)}"`,
       `"${item.statusVerifikasi || ''}"`,
-      `"${item.screenshotUrl || item.linkScreenshot || ''}"`
+      `"${getItemScreenshot(item)}"`
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + 
