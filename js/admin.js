@@ -38,21 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const rollingPlaceholder = document.getElementById('rollingPlaceholder');
   const rollingAnimation = document.getElementById('rollingAnimation');
   const rollingName = document.getElementById('rollingName');
-  const rollingNip = document.getElementById('rollingNip');
+  const rollingWa = document.getElementById('rollingWa');
   const winnerCard = document.getElementById('winnerCard');
   const poolCountText = document.getElementById('poolCountText');
-
-  const imageModal = document.getElementById('imageModal');
-  const imageModalSrc = document.getElementById('imageModalSrc');
-  const imageModalTitle = document.getElementById('imageModalTitle');
-  const imageModalDirectLink = document.getElementById('imageModalDirectLink');
-  const btnCloseImageModal = document.getElementById('btnCloseImageModal');
-
-  const configModal = document.getElementById('configModal');
-  const btnOpenConfigModal = document.getElementById('btnOpenConfigModal');
-  const btnCloseConfigModal = document.getElementById('btnCloseConfigModal');
-  const configForm = document.getElementById('configForm');
-  const newQuizCodeInput = document.getElementById('newQuizCodeInput');
 
   let currentSubmissions = [];
   let selectedStatus = 'Semua';
@@ -61,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlPwd = urlParams.get('pwd') || urlParams.get('password');
   if (urlPwd) {
     adminPassword = urlPwd;
-    // Bersihkan URL seketika agar password tidak tersimpan di address bar atau riwayat browser
+    // Bersihkan URL seketika agar password tidak tersimpan di address bar
     try {
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (e) {}
@@ -120,10 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnLogout.classList.remove('hidden');
         loginError.classList.add('hidden');
 
-        if (data.currentQuizCode) {
-          newQuizCodeInput.value = data.currentQuizCode;
-        }
-
         renderDashboard(data);
       } else {
         if (showError) {
@@ -139,24 +123,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 2. Fetch & Render Data
-  async function loadData() {
-    if (!adminPassword) return;
-    try {
-      const url = getAdminApiUrl(adminPassword);
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        renderDashboard(data);
-      }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    }
+  // Helper mendapatkan alamat pengiriman
+  function getItemAlamat(item) {
+    if (item.alamat && item.alamat.trim()) return item.alamat.trim();
+    if (item.alamatPengiriman && item.alamatPengiriman.trim()) return item.alamatPengiriman.trim();
+    if (item.unitKerja && item.unitOrganisasi === 'Alamat Pengiriman') return item.unitKerja.trim();
+    if (item.unitOrganisasi && item.unitKerja) return `${item.unitOrganisasi} — ${item.unitKerja}`;
+    return item.unitKerja || item.unitOrganisasi || '-';
   }
 
+  // 2. Fetch & Render Data
   function renderDashboard(data) {
     const rawList = data.submissions || [];
-    // Gabungkan dengan status yang diverifikasi admin di browser
     currentSubmissions = rawList.map(item => {
       const id = item.kodeUnik || item.id || String(item.rowNumber);
       const savedStatus = localStorage.getItem('grya_admin_status_' + id);
@@ -177,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     statPending.textContent = pending;
     statRejected.textContent = rejected;
 
-    // Update Filter Tab Badge Numbers
+    // Update Filter Tab Badges
     statusTabPills.forEach(pill => {
       const st = pill.getAttribute('data-status');
       if (st === 'Semua') pill.textContent = `Semua (${total})`;
@@ -215,19 +193,19 @@ document.addEventListener('DOMContentLoaded', () => {
     applyFilterAndRender();
   });
 
-  // 4. Filter & Render Both Views (Mobile Cards & Desktop Table)
+  // 4. Filter & Render
   function applyFilterAndRender() {
     const query = searchInput.value.toLowerCase().trim();
 
     let filtered = currentSubmissions.filter(item => {
       const matchStatus = (selectedStatus === 'Semua') || (item.statusVerifikasi === selectedStatus);
+      const alamatText = getItemAlamat(item).toLowerCase();
       const matchQuery = !query || 
         (item.nama && item.nama.toLowerCase().includes(query)) ||
-        (item.nip && item.nip.includes(query)) ||
         (item.whatsapp && item.whatsapp.includes(query)) ||
-        (item.instagram && item.instagram.toLowerCase().includes(query)) ||
         (item.kodeUnik && item.kodeUnik.toLowerCase().includes(query)) ||
-        (item.unitOrganisasi && item.unitOrganisasi.toLowerCase().includes(query));
+        alamatText.includes(query) ||
+        (item.nip && item.nip.includes(query));
 
       return matchStatus && matchQuery;
     });
@@ -266,10 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const waNumber = (item.whatsapp || '').replace(/\D/g, '');
-      const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20PKP%20terkait%20Kuis%20Detektif%20GRYA...`;
-      const igHandle = (item.instagram || '').replace('@', '');
-      const igUrl = `https://instagram.com/${igHandle}`;
-      const photoSrc = item.screenshotUrl || item.linkScreenshot || '';
+      const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20Perumahan%20dan%20Kawasan%20Permukiman%20(PKP)%20terkait%20undian%20Majalah%20GRYA...`;
+      const alamat = getItemAlamat(item);
 
       card.innerHTML = `
         <!-- Card Header: Kode & Status -->
@@ -283,44 +259,22 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>${statusPill}</div>
         </div>
 
-        <!-- Card Body: Identitas -->
+        <!-- Card Body: Identitas & Alamat -->
         <div>
           <h4 class="text-sm font-extrabold text-gray-900 leading-tight">${escapeHtml(item.nama || '-')}</h4>
-          <p class="text-xs font-mono text-gray-600 font-semibold mt-0.5">NIP: ${escapeHtml(item.nip || '-')}</p>
-          <div class="flex items-start gap-1 text-[11px] text-gray-600 mt-1.5 bg-gray-50 p-2 rounded-xl">
-            <i data-lucide="building-2" class="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5"></i>
-            <span class="truncate"><strong>${escapeHtml(item.unitOrganisasi || '-')}</strong> — ${escapeHtml(item.unitKerja || '-')}</span>
+          <div class="flex items-center gap-2 mt-1">
+            <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 text-xs active:bg-green-100">
+              <i data-lucide="message-circle" class="w-3 h-3"></i> ${escapeHtml(item.whatsapp || '-')}
+            </a>
+          </div>
+          <div class="flex items-start gap-1.5 text-xs text-gray-700 mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+            <i data-lucide="map-pin" class="w-4 h-4 text-[#D65A3C] flex-shrink-0 mt-0.5"></i>
+            <span class="leading-relaxed">${escapeHtml(alamat)}</span>
           </div>
         </div>
 
-        <!-- Quick Contacts & Code Badge -->
-        <div class="flex items-center justify-between flex-wrap gap-2 text-xs pt-1">
-          <div class="flex items-center gap-1.5">
-            <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 text-[11px] active:bg-green-100">
-              <i data-lucide="message-circle" class="w-3 h-3"></i> WA
-            </a>
-            <a href="${igUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-pink-50 text-pink-700 font-bold rounded-lg border border-pink-200 text-[11px] active:bg-pink-100">
-              <i data-lucide="instagram" class="w-3 h-3"></i> ${escapeHtml(item.instagram || '-')}
-            </a>
-          </div>
-
-          <div class="flex items-center gap-1.5">
-            <span class="text-[10px] text-gray-500 font-semibold">Kode:</span>
-            <span class="font-mono font-bold text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-300">
-              ${escapeHtml(item.kodeQuiz || '-')}
-            </span>
-          </div>
-        </div>
-
-        <!-- Action Row: View Photo & Status Segmentation -->
-        <div class="pt-2 border-t border-gray-100 space-y-2">
-          ${photoSrc ? `
-            <button type="button" class="btn-view-image w-full py-2 bg-blue-50 active:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-blue-200" data-src="${escapeHtml(photoSrc)}" data-nama="${escapeHtml(item.nama)}">
-              <i data-lucide="image" class="w-3.5 h-3.5"></i> Periksa Bukti Instagram Story
-            </button>
-          ` : ''}
-
-          <!-- Verification Segmented Buttons -->
+        <!-- Action Row: Verification Segmented Buttons -->
+        <div class="pt-2 border-t border-gray-100">
           <div class="grid grid-cols-3 gap-1.5">
             <button type="button" class="btn-status-verify py-2 rounded-xl text-[11px] font-bold text-white bg-green-600 active:bg-green-700 flex items-center justify-center gap-1 shadow-xs" data-id="${escapeHtml(item.id || item.kodeUnik)}">
               <i data-lucide="check" class="w-3.5 h-3.5"></i> Verifikasi
@@ -360,9 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const waNumber = (item.whatsapp || '').replace(/\D/g, '');
       const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20PKP...`;
-      const igHandle = (item.instagram || '').replace('@', '');
-      const igUrl = `https://instagram.com/${igHandle}`;
-      const photoSrc = item.screenshotUrl || item.linkScreenshot || '';
+      const alamat = getItemAlamat(item);
 
       tr.innerHTML = `
         <td class="py-3 px-3.5 whitespace-nowrap">
@@ -371,46 +323,27 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3.5">
           <p class="font-bold text-gray-900">${escapeHtml(item.nama || '-')}</p>
-          <p class="text-[11px] font-mono text-gray-600">NIP: ${escapeHtml(item.nip || '-')}</p>
-        </td>
-        <td class="py-3 px-3.5">
-          <p class="font-medium text-gray-800">${escapeHtml(item.unitOrganisasi || '-')}</p>
-          <p class="text-[11px] text-gray-500">${escapeHtml(item.unitKerja || '-')}</p>
         </td>
         <td class="py-3 px-3.5 whitespace-nowrap">
-          <div class="flex flex-col gap-1">
-            <a href="${waUrl}" target="_blank" class="text-green-600 hover:text-green-800 font-mono text-xs flex items-center gap-1 font-semibold">
-              <i data-lucide="message-circle" class="w-3 h-3"></i> ${escapeHtml(item.whatsapp || '-')}
-            </a>
-            <a href="${igUrl}" target="_blank" class="text-pkp-terracotta hover:underline text-xs flex items-center gap-1">
-              <i data-lucide="instagram" class="w-3 h-3"></i> ${escapeHtml(item.instagram || '-')}
-            </a>
-          </div>
+          <a href="${waUrl}" target="_blank" class="text-green-600 hover:text-green-800 font-mono text-xs flex items-center gap-1 font-semibold">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> ${escapeHtml(item.whatsapp || '-')}
+          </a>
         </td>
-        <td class="py-3 px-3.5 text-center">
-          <span class="font-mono font-bold text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-200">
-            ${escapeHtml(item.kodeQuiz || '-')}
-          </span>
-        </td>
-        <td class="py-3 px-3.5 text-center whitespace-nowrap">
-          ${photoSrc ? `
-            <button type="button" class="btn-view-image text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-medium inline-flex items-center gap-1 transition-colors" data-src="${escapeHtml(photoSrc)}" data-nama="${escapeHtml(item.nama)}">
-              <i data-lucide="image" class="w-3 h-3"></i> Lihat
-            </button>
-          ` : '-'}
+        <td class="py-3 px-3.5 max-w-xs">
+          <p class="text-xs text-gray-700 leading-relaxed">${escapeHtml(alamat)}</p>
         </td>
         <td class="py-3 px-3.5 text-center whitespace-nowrap">
           ${statusBadge}
         </td>
         <td class="py-3 px-3.5 text-center whitespace-nowrap">
           <div class="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-            <button type="button" class="btn-status-verify p-1 rounded text-green-700 hover:bg-green-200 transition-colors" title="Verifikasi" data-id="${escapeHtml(item.id || item.kodeUnik)}">
+            <button type="button" class="btn-status-verify p-1.5 rounded text-green-700 hover:bg-green-200 transition-colors" title="Verifikasi" data-id="${escapeHtml(item.id || item.kodeUnik)}">
               <i data-lucide="check" class="w-4 h-4"></i>
             </button>
-            <button type="button" class="btn-status-pending p-1 rounded text-amber-700 hover:bg-amber-200 transition-colors" title="Tunda" data-id="${escapeHtml(item.id || item.kodeUnik)}">
+            <button type="button" class="btn-status-pending p-1.5 rounded text-amber-700 hover:bg-amber-200 transition-colors" title="Tunda" data-id="${escapeHtml(item.id || item.kodeUnik)}">
               <i data-lucide="clock" class="w-4 h-4"></i>
             </button>
-            <button type="button" class="btn-status-reject p-1 rounded text-red-700 hover:bg-red-200 transition-colors" title="Tolak" data-id="${escapeHtml(item.id || item.kodeUnik)}">
+            <button type="button" class="btn-status-reject p-1.5 rounded text-red-700 hover:bg-red-200 transition-colors" title="Tolak" data-id="${escapeHtml(item.id || item.kodeUnik)}">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
@@ -422,22 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function attachActionListeners() {
-    // 1. Image View Modal
-    document.querySelectorAll('.btn-view-image').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const src = btn.getAttribute('data-src');
-        const nama = btn.getAttribute('data-nama');
-        if (src) {
-          imageModalSrc.src = src;
-          imageModalTitle.textContent = `Bukti Story: ${nama}`;
-          imageModalDirectLink.href = src;
-          imageModal.classList.remove('hidden');
-          lucide.createIcons();
-        }
-      });
-    });
-
-    // 2. Status Buttons
     document.querySelectorAll('.btn-status-verify').forEach(btn => {
       btn.addEventListener('click', () => updateStatus(btn.getAttribute('data-id'), 'Terverifikasi'));
     });
@@ -450,16 +367,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function updateStatus(id, newStatus) {
-    // 1. Simpan ke local storage browser agar status diverifikasi permanen di admin
+    // 1. Simpan ke local storage
     localStorage.setItem('grya_admin_status_' + id, newStatus);
 
-    // 2. Optimistic UI update: langsung ubah status & counter di layar tanpa jeda
+    // 2. Optimistic UI update
     const item = currentSubmissions.find(s => s.id === id || s.kodeUnik === id || String(s.rowNumber) === String(id));
     if (item) {
       item.statusVerifikasi = newStatus;
       if (item.kodeUnik) localStorage.setItem('grya_admin_status_' + item.kodeUnik, newStatus);
       if (item.rowNumber) localStorage.setItem('grya_admin_status_' + item.rowNumber, newStatus);
-      renderDashboard({ submissions: currentSubmissions, currentQuizCode: newQuizCodeInput.value });
+      renderDashboard({ submissions: currentSubmissions });
     }
 
     // 3. Sinkronisasi ke backend di latar belakang
@@ -468,11 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const isOnline = appsScriptUrl && appsScriptUrl.trim().length > 10 && (window.location.hostname.includes('github.io') || !window.location.port || window.location.protocol === 'file:');
 
       if (isOnline) {
-        // Kirim perubahan status ke Google Apps Script (Google Sheets)
         const url = `${appsScriptUrl}?action=updateStatus&password=${encodeURIComponent(adminPassword)}&id=${encodeURIComponent(id)}&status=${encodeURIComponent(newStatus)}`;
         fetch(url).then(r => r.json()).catch(() => {});
       } else {
-        // Kirim ke server lokal Express
         fetch('/api/admin/verify', {
           method: 'POST',
           headers: {
@@ -517,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const interval = setInterval(() => {
       const tempWinner = verified[Math.floor(Math.random() * verified.length)];
       rollingName.textContent = tempWinner.nama;
-      rollingNip.textContent = `NIP: ${tempWinner.nip}`;
+      if (rollingWa) rollingWa.textContent = `WA: ${tempWinner.whatsapp}`;
       rollCount++;
 
       if (rollCount >= maxRolls) {
@@ -539,15 +454,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    const alamat = getItemAlamat(finalWinner);
     document.getElementById('winnerNama').textContent = finalWinner.nama;
-    document.getElementById('winnerNip').textContent = finalWinner.nip;
-    document.getElementById('winnerIg').textContent = finalWinner.instagram;
-    document.getElementById('winnerUnit').textContent = `${finalWinner.unitOrganisasi} — ${finalWinner.unitKerja}`;
-    document.getElementById('winnerWa').textContent = finalWinner.whatsapp;
+    document.getElementById('winnerWaNumber').textContent = finalWinner.whatsapp;
+    document.getElementById('winnerAlamat').textContent = alamat;
     document.getElementById('winnerBadgeCode').textContent = finalWinner.kodeUnik;
 
     const waNumber = (finalWinner.whatsapp || '').replace(/\D/g, '');
-    const waText = `Halo Selamat ${encodeURIComponent(finalWinner.nama)}! Anda terpilih sebagai Pemenang Kuis Detektif GRYA (Kementerian PKP) dengan Kode Bukti: ${finalWinner.kodeUnik}.`;
+    const waText = `Halo Selamat ${encodeURIComponent(finalWinner.nama)}! Anda terpilih sebagai Pemenang Undian Kuis Detektif GRYA (Kementerian PKP) dengan Kode Bukti: ${finalWinner.kodeUnik}. Hadiah akan segera dikirimkan ke alamat Anda: ${encodeURIComponent(alamat)}.`;
     document.getElementById('winnerWaLink').href = `https://wa.me/${waNumber}?text=${waText}`;
 
     rollingAnimation.classList.add('hidden');
@@ -556,44 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
   }
 
-  // 6. Modal Gambar Bukti
-  btnCloseImageModal.addEventListener('click', () => imageModal.classList.add('hidden'));
-
-  // 7. Modal Pengaturan Kode Kuis
-  btnOpenConfigModal.addEventListener('click', () => {
-    configModal.classList.remove('hidden');
-  });
-
-  btnCloseConfigModal.addEventListener('click', () => configModal.classList.add('hidden'));
-
-  configForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newCode = newQuizCodeInput.value.trim();
-    if (!newCode) return;
-
-    try {
-      const res = await fetch('/api/admin/config/quiz-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': adminPassword
-        },
-        body: JSON.stringify({ newCode })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        alert(data.message);
-        configModal.classList.add('hidden');
-      } else {
-        alert('Gagal memperbarui kode kuis.');
-      }
-    } catch (err) {
-      alert('Kesalahan koneksi.');
-    }
-  });
-
-  // 8. Ekspor CSV
+  // 6. Ekspor CSV
   btnExportCsv.addEventListener('click', () => {
     if (currentSubmissions.length === 0) {
       alert('Belum ada data untuk diekspor.');
@@ -604,28 +481,18 @@ document.addEventListener('DOMContentLoaded', () => {
       'Timestamp',
       'Kode Unik',
       'Nama Lengkap',
-      'NIP',
-      'Unit Organisasi',
-      'Unit Kerja',
       'Nomor WhatsApp',
-      'Username Instagram',
-      'Kode Quiz',
-      'Status Verifikasi',
-      'Link Screenshot'
+      'Alamat Pengiriman Hadiah',
+      'Status Verifikasi'
     ];
 
     const rows = currentSubmissions.map(item => [
       `"${item.timestamp || ''}"`,
       `"${item.kodeUnik || ''}"`,
       `"${(item.nama || '').replace(/"/g, '""')}"`,
-      `"'${item.nip || ''}"`,
-      `"${(item.unitOrganisasi || '').replace(/"/g, '""')}"`,
-      `"${(item.unitKerja || '').replace(/"/g, '""')}"`,
       `"'${item.whatsapp || ''}"`,
-      `"${item.instagram || ''}"`,
-      `"${item.kodeQuiz || ''}"`,
-      `"${item.statusVerifikasi || ''}"`,
-      `"${item.screenshotUrl || item.linkScreenshot || ''}"`
+      `"${getItemAlamat(item).replace(/"/g, '""')}"`,
+      `"${item.statusVerifikasi || ''}"`
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + 
@@ -634,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `peserta_detektif_grya_${Date.now()}.csv`);
+    link.setAttribute('download', `peserta_undian_grya_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

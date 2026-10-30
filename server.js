@@ -129,153 +129,97 @@ function normalizeWhatsApp(wa) {
 // API ROUTES
 // ==========================================
 
-// 1. Cek apakah NIP sudah pernah terdaftar
-app.get('/api/check-nip/:nip', (req, res) => {
-  const nip = (req.params.nip || '').replace(/\D/g, '');
-  if (!nip || nip.length !== 18) {
+// 1. Cek apakah WhatsApp sudah pernah terdaftar
+app.get('/api/check-whatsapp/:wa', (req, res) => {
+  const wa = normalizeWhatsApp(req.params.wa || '');
+  if (!wa || wa.length < 10) {
     return res.json({ exists: false, validFormat: false });
   }
   const submissions = loadSubmissions();
-  const exists = submissions.some(item => item.nip === nip);
+  const exists = submissions.some(item => normalizeWhatsApp(item.whatsapp || '') === wa);
   return res.json({ exists, validFormat: true });
 });
 
+// Fallback cek NIP
+app.get('/api/check-nip/:nip', (req, res) => {
+  return res.json({ exists: false, validFormat: true });
+});
+
 // 2. Submit Form Jawaban
-app.post('/api/submit', submissionLimiter, upload.single('screenshot'), async (req, res) => {
+app.post('/api/submit', submissionLimiter, async (req, res) => {
   try {
-    const config = loadConfig();
     const {
       nama,
-      nip,
-      unitOrganisasi,
-      unitKerja,
       whatsapp,
-      instagram,
-      kodeQuiz,
-      persetujuan
+      alamat,
+      alamatPengiriman
     } = req.body;
 
     // Validasi Nama
     if (!nama || nama.trim().length < 3) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'Nama Lengkap minimal 3 karakter.' });
-    }
-
-    // Validasi NIP (18 digit angka)
-    const cleanNip = (nip || '').replace(/\D/g, '');
-    if (!cleanNip || cleanNip.length !== 18) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'NIP harus terdiri dari 18 digit angka.' });
-    }
-
-    // Validasi Unit
-    if (!unitOrganisasi || !unitOrganisasi.trim()) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'Unit Organisasi wajib diisi.' });
-    }
-
-    if (!unitKerja || !unitKerja.trim()) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'Unit Kerja wajib diisi.' });
+      return res.status(400).json({ success: false, message: 'Nama lengkap minimal 3 karakter.' });
     }
 
     // Validasi WhatsApp
     const cleanWa = normalizeWhatsApp(whatsapp || '');
     if (cleanWa.length < 10 || cleanWa.length > 15) {
-      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, message: 'Nomor WhatsApp tidak valid (contoh: 08123456789).' });
     }
 
-    // Validasi Instagram
-    let cleanIg = (instagram || '').trim();
-    if (cleanIg && !cleanIg.startsWith('@')) {
-      cleanIg = '@' + cleanIg;
-    }
-    if (!cleanIg || cleanIg.length < 2) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'Username Instagram wajib diisi.' });
+    // Validasi Alamat
+    const fullAlamat = (alamat || alamatPengiriman || req.body.unitKerja || '').trim();
+    if (!fullAlamat || fullAlamat.length < 10) {
+      return res.status(400).json({ success: false, message: 'Alamat pengiriman hadiah minimal 10 karakter.' });
     }
 
-    // Validasi Kode Quiz
-    const cleanQuizCode = (kodeQuiz || '').trim().toUpperCase().replace(/[\s-]/g, '');
-    const isCodeValid = config.validQuizCodes.some(c => c.toUpperCase().replace(/[\s-]/g, '') === cleanQuizCode);
-    if (!isCodeValid) {
-      if (req.file) fs.unlinkSync(req.file.path);
+    // Cek Duplikasi WhatsApp
+    const submissions = loadSubmissions();
+    const isDuplicate = submissions.some(item => normalizeWhatsApp(item.whatsapp || '') === cleanWa);
+    if (isDuplicate) {
       return res.status(400).json({
         success: false,
-        errorCode: 'INVALID_QUIZ_CODE',
-        message: 'Kode belum tepat, coba periksa kembali jawabanmu'
+        errorCode: 'DUPLICATE_WA',
+        message: 'Nomor WhatsApp ini sudah pernah terdaftar untuk undian.'
       });
     }
 
-    // Validasi File Bukti Screenshot
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Screenshot bukti Instagram Story wajib diunggah.' });
-    }
+    // Generate Kode Unik
+    const randomHex = Math.floor(1000 + Math.random() * 9000);
+    const uniqueCode = 'GRYA-' + randomHex;
+    const now = new Date();
+    const timestamp = now.toISOString();
 
-    // Validasi Persetujuan
-    if (persetujuan !== true && persetujuan !== 'true' && persetujuan !== 'on') {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ success: false, message: 'Anda harus menyetujui ketentuan dan verifikasi data.' });
-    }
-
-    // CEGAH PENGIRIMAN GANDA: Cek apakah NIP sudah pernah terdaftar
-    const submissions = loadSubmissions();
-    const isDuplicate = submissions.some(sub => sub.nip === cleanNip);
-    if (isDuplicate) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(409).json({
-        success: false,
-        errorCode: 'DUPLICATE_NIP',
-        message: 'Data dengan NIP ini sudah pernah terkirim.'
-      });
-    }
-
-    // Buat Kode Unik Bukti Peserta: GRYA-XXXX
-    const uniqueNumber = Math.floor(1000 + Math.random() * 9000);
-    const kodeUnik = `GRYA-${uniqueNumber}`;
-    const timestamp = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
-    const screenshotUrl = `/uploads/${req.file.filename}`;
-
-    const newRecord = {
-      id: 'sub_' + Date.now(),
-      timestamp,
-      kodeUnik,
+    const newEntry = {
+      id: uniqueCode,
+      kodeUnik: uniqueCode,
+      timestamp: timestamp,
       nama: nama.trim(),
-      nip: cleanNip,
-      unitOrganisasi: unitOrganisasi.trim(),
-      unitKerja: unitKerja.trim(),
       whatsapp: cleanWa,
-      instagram: cleanIg,
-      kodeQuiz: cleanQuizCode,
+      alamat: fullAlamat,
+      alamatPengiriman: fullAlamat,
       statusVerifikasi: 'Menunggu Verifikasi',
-      screenshotUrl,
-      createdAt: new Date().toISOString()
+      createdAt: now.getTime()
     };
 
-    submissions.push(newRecord);
+    submissions.unshift(newEntry);
     saveSubmissions(submissions);
 
-    // Kirim respons sukses ke peserta
     return res.json({
       success: true,
-      message: 'Terima kasih, jawabanmu sudah kami terima! Pemenang akan diumumkan sesuai jadwal.',
+      message: 'Terima kasih, data Anda sudah tercatat untuk undian kuis!',
       data: {
-        nama: newRecord.nama,
-        nip: newRecord.nip,
-        kodeUnik: newRecord.kodeUnik,
-        timestamp: newRecord.timestamp
+        id: uniqueCode,
+        kodeUnik: uniqueCode,
+        nama: newEntry.nama,
+        whatsapp: newEntry.whatsapp,
+        alamat: newEntry.alamat,
+        timestamp: newEntry.timestamp
       }
     });
 
-  } catch (error) {
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    return res.status(500).json({
-      success: false,
-      message: 'Terjadi kesalahan sistem saat menyimpan data: ' + error.message
-    });
+  } catch (err) {
+    console.error('Submit error:', err);
+    return res.status(500).json({ success: false, message: 'Terjadi kesalahan sistem di server.' });
   }
 });
 

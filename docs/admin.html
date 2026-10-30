@@ -164,7 +164,7 @@
         
         <!-- Search Input -->
         <div class="relative">
-          <input type="text" id="searchInput" class="input-custom pl-10 pr-8 py-2.5 text-xs sm:text-sm" placeholder="Cari Nama, NIP, WA, Instagram, Kode...">
+          <input type="text" id="searchInput" class="input-custom pl-10 pr-8 py-2.5 text-xs sm:text-sm" placeholder="Cari Nama, WhatsApp, Alamat, Kode...">
           <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-4 pointer-events-none"></i>
           <button type="button" id="btnClearSearch" class="hidden absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
             <i data-lucide="x" class="w-4 h-4"></i>
@@ -215,11 +215,9 @@
             <thead>
               <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider text-[11px]">
                 <th class="py-3 px-3.5">Kode &amp; Waktu</th>
-                <th class="py-3 px-3.5">Identitas Peserta</th>
-                <th class="py-3 px-3.5">Unit Kerja</th>
-                <th class="py-3 px-3.5">Kontak</th>
-                <th class="py-3 px-3.5 text-center">Jawaban</th>
-                <th class="py-3 px-3.5 text-center">Bukti Story</th>
+                <th class="py-3 px-3.5">Nama Peserta</th>
+                <th class="py-3 px-3.5">Nomor WhatsApp</th>
+                <th class="py-3 px-3.5">Alamat Pengiriman Hadiah</th>
                 <th class="py-3 px-3.5 text-center">Status</th>
                 <th class="py-3 px-3.5 text-center">Aksi</th>
               </tr>
@@ -266,7 +264,7 @@
           <div id="rollingAnimation" class="hidden text-center">
             <p class="text-[10px] uppercase tracking-widest text-amber-300 font-bold mb-1 animate-pulse">Mengacak Peserta...</p>
             <p id="rollingName" class="text-xl font-bold font-mono tracking-tight text-white">---</p>
-            <p id="rollingNip" class="text-xs font-mono text-gray-300 mt-1">NIP: ---</p>
+            <p id="rollingWa" class="text-xs font-mono text-gray-300 mt-1">WA: ---</p>
           </div>
         </div>
 
@@ -282,24 +280,18 @@
             <p class="text-[10px] text-gray-500">Nama Lengkap:</p>
             <p id="winnerNama" class="text-sm font-extrabold text-gray-900 truncate"></p>
           </div>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <p class="text-[10px] text-gray-500">NIP:</p>
-              <p id="winnerNip" class="font-mono font-semibold text-gray-800 text-[11px]"></p>
-            </div>
-            <div>
-              <p class="text-[10px] text-gray-500">Instagram:</p>
-              <p id="winnerIg" class="font-semibold text-pkp-terracotta text-[11px] truncate"></p>
-            </div>
+          <div>
+            <p class="text-[10px] text-gray-500">Nomor WhatsApp:</p>
+            <p id="winnerWaNumber" class="font-mono font-bold text-gray-800 text-xs"></p>
           </div>
           <div>
-            <p class="text-[10px] text-gray-500">Unit Organisasi &amp; Kerja:</p>
-            <p id="winnerUnit" class="text-[11px] font-medium text-gray-800 truncate"></p>
+            <p class="text-[10px] text-gray-500">Alamat Pengiriman Hadiah:</p>
+            <p id="winnerAlamat" class="text-xs text-gray-800 leading-relaxed"></p>
           </div>
           <div class="pt-2 border-t border-amber-200 flex items-center justify-between">
-            <p id="winnerWa" class="font-mono font-bold text-green-700 text-xs"></p>
-            <a id="winnerWaLink" href="#" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1">
-              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Hubungi WA
+            <span class="text-[10px] text-gray-500">Hubungi langsung via WhatsApp:</span>
+            <a id="winnerWaLink" href="#" target="_blank" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shadow-xs">
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Chat WA
             </a>
           </div>
         </div>
@@ -367,8 +359,8 @@
   </footer>
 
   <!-- Scripts with Cache-Busting -->
-  <script src="js/config.js?v=20261027_04"></script>
-  <script src="js/admin.js?v=20261027_04"></script>
+  <script src="js/config.js?v=20261030_02"></script>
+  <script src="js/admin.js?v=20261030_02"></script>
   <script>
     lucide.createIcons();
   </script>
