@@ -146,36 +146,55 @@ app.get('/api/check-nip/:nip', (req, res) => {
 });
 
 // 2. Submit Form Jawaban
-app.post('/api/submit', submissionLimiter, async (req, res) => {
+app.post('/api/submit', submissionLimiter, upload.single('screenshot'), async (req, res) => {
   try {
+    const config = loadConfig();
     const {
       nama,
       whatsapp,
       alamat,
-      alamatPengiriman
+      alamatPengiriman,
+      instagram,
+      kodeQuiz
     } = req.body;
 
     // Validasi Nama
     if (!nama || nama.trim().length < 3) {
+      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, message: 'Nama lengkap minimal 3 karakter.' });
     }
 
     // Validasi WhatsApp
     const cleanWa = normalizeWhatsApp(whatsapp || '');
     if (cleanWa.length < 10 || cleanWa.length > 15) {
+      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, message: 'Nomor WhatsApp tidak valid (contoh: 08123456789).' });
     }
 
     // Validasi Alamat
     const fullAlamat = (alamat || alamatPengiriman || req.body.unitKerja || '').trim();
     if (!fullAlamat || fullAlamat.length < 10) {
+      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({ success: false, message: 'Alamat pengiriman hadiah minimal 10 karakter.' });
+    }
+
+    // Validasi Kode Quiz
+    const cleanQuizCode = (kodeQuiz || '').trim().toUpperCase().replace(/[\s-]/g, '');
+    const isCodeValid = config.validQuizCodes.some(c => c.toUpperCase().replace(/[\s-]/g, '') === cleanQuizCode);
+    if (cleanQuizCode && !isCodeValid) {
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        success: false,
+        errorCode: 'INVALID_QUIZ_CODE',
+        message: 'Kode belum tepat, coba periksa kembali jawabanmu'
+      });
     }
 
     // Cek Duplikasi WhatsApp
     const submissions = loadSubmissions();
     const isDuplicate = submissions.some(item => normalizeWhatsApp(item.whatsapp || '') === cleanWa);
     if (isDuplicate) {
+      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(400).json({
         success: false,
         errorCode: 'DUPLICATE_WA',
@@ -188,6 +207,7 @@ app.post('/api/submit', submissionLimiter, async (req, res) => {
     const uniqueCode = 'GRYA-' + randomHex;
     const now = new Date();
     const timestamp = now.toISOString();
+    const screenshotUrl = req.file ? `/uploads/${req.file.filename}` : '-';
 
     const newEntry = {
       id: uniqueCode,
@@ -197,6 +217,9 @@ app.post('/api/submit', submissionLimiter, async (req, res) => {
       whatsapp: cleanWa,
       alamat: fullAlamat,
       alamatPengiriman: fullAlamat,
+      instagram: (instagram || '-').trim(),
+      kodeQuiz: cleanQuizCode || '2134',
+      screenshotUrl: screenshotUrl,
       statusVerifikasi: 'Menunggu Verifikasi',
       createdAt: now.getTime()
     };
@@ -206,13 +229,14 @@ app.post('/api/submit', submissionLimiter, async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Terima kasih, data Anda sudah tercatat untuk undian kuis!',
+      message: 'Terima kasih, data dan jawaban kuis Anda sudah tercatat!',
       data: {
         id: uniqueCode,
         kodeUnik: uniqueCode,
         nama: newEntry.nama,
         whatsapp: newEntry.whatsapp,
         alamat: newEntry.alamat,
+        kodeQuiz: newEntry.kodeQuiz,
         timestamp: newEntry.timestamp
       }
     });

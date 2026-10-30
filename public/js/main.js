@@ -1,7 +1,6 @@
 /**
- * Detektif GRYA - Form Undian Hadiah
+ * Detektif GRYA - Form Logic Kuis Majalah GRYA Edisi II
  * Kementerian Perumahan dan Kawasan Permukiman (PKP)
- * Formulir: Nama, Nomor Whatsapp, Alamat Pengiriman Hadiah
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,16 +10,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSubmitText = document.getElementById('btnSubmitText');
   const btnSpinner = document.getElementById('btnSpinner');
 
+  // Input Data Diri & Alamat
   const namaInput = document.getElementById('nama');
   const whatsappInput = document.getElementById('whatsapp');
   const alamatInput = document.getElementById('alamat');
   const whatsappDuplicateStatus = document.getElementById('whatsappDuplicateStatus');
+
+  // Bukti Instagram
+  const screenshotInput = document.getElementById('screenshot');
+  const uploadDropzone = document.getElementById('uploadDropzone');
+  const previewWrapper = document.getElementById('previewWrapper');
+  const imagePreview = document.getElementById('imagePreview');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+  const btnRemoveImage = document.getElementById('btnRemoveImage');
+  const checkTagInput = document.getElementById('checkTag');
+  const checkTagCard = document.getElementById('checkTagCard');
+  const instagramInput = document.getElementById('instagram');
+
+  // Kode Quiz
+  const clueToggle = document.getElementById('clueToggle');
+  const clueBody = document.getElementById('clueBody');
+  const clueChevron = document.getElementById('clueChevron');
+  const kodeQuizInput = document.getElementById('kodeQuiz');
+  const quizCodeCard = document.getElementById('quizCodeCard');
+
+  // Persetujuan
+  const persetujuanInput = document.getElementById('persetujuan');
+  const persetujuanCard = document.getElementById('persetujuanCard');
 
   // Success Modal Elements
   const successModal = document.getElementById('successModal');
   const receiptNama = document.getElementById('receiptNama');
   const receiptWhatsapp = document.getElementById('receiptWhatsapp');
   const receiptAlamat = document.getElementById('receiptAlamat');
+  const receiptKodeQuiz = document.getElementById('receiptKodeQuiz');
   const receiptKodeUnik = document.getElementById('receiptKodeUnik');
   const btnCopyCode = document.getElementById('btnCopyCode');
   const btnShareWa = document.getElementById('btnShareWa');
@@ -30,7 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const globalAlert = document.getElementById('globalAlert');
   const globalAlertText = document.getElementById('globalAlertText');
 
-  // Poster Zoom Lightbox Modal
+  // File Upload State
+  let selectedFile = null;
+  let selectedFileBase64 = null;
+
+  // 1. Poster Zoom Lightbox Modal
   const btnZoomPoster = document.getElementById('btnZoomPoster');
   const posterModal = document.getElementById('posterModal');
   const btnClosePosterModal = document.getElementById('btnClosePosterModal');
@@ -50,7 +78,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 1. WhatsApp Formatting & Duplication Check
+  // 2. Clue Accordion
+  if (clueToggle) {
+    clueToggle.addEventListener('click', () => {
+      const isHidden = clueBody.classList.contains('hidden');
+      if (isHidden) {
+        clueBody.classList.remove('hidden');
+        clueChevron.style.transform = 'rotate(180deg)';
+      } else {
+        clueBody.classList.add('hidden');
+        clueChevron.style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+
+  // 3. Interactive Checkbox Cards Visual Feedback
+  function syncCheckboxCard(input, card) {
+    if (input.checked) {
+      card.classList.add('is-checked');
+    } else {
+      card.classList.remove('is-checked');
+    }
+  }
+
+  if (checkTagInput && checkTagCard) {
+    checkTagInput.addEventListener('change', () => {
+      syncCheckboxCard(checkTagInput, checkTagCard);
+      hideFieldError('checkTag');
+    });
+  }
+
+  if (persetujuanInput && persetujuanCard) {
+    persetujuanInput.addEventListener('change', () => {
+      syncCheckboxCard(persetujuanInput, persetujuanCard);
+      hideFieldError('persetujuan');
+    });
+  }
+
+  // 4. WhatsApp Formatting & Duplication Check
   function getCleanWhatsApp(val) {
     let clean = (val || '').trim().replace(/\D/g, '');
     if (clean.startsWith('0')) {
@@ -81,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
   whatsappInput.addEventListener('blur', () => {
     const cleanWa = validateWhatsApp();
     if (cleanWa) {
-      // Simpan format rapi di input
       whatsappInput.value = cleanWa;
       checkLocalDuplicate(cleanWa);
     }
@@ -106,7 +170,138 @@ document.addEventListener('DOMContentLoaded', () => {
     whatsappInput.classList.add('error-border');
   }
 
-  // 2. Field Error Helpers
+  // 5. Instagram Username Formatting
+  instagramInput.addEventListener('blur', (e) => {
+    let val = e.target.value.trim().replace(/\s+/g, '');
+    if (val && !val.startsWith('@')) {
+      val = '@' + val;
+    }
+    e.target.value = val;
+    if (val.length >= 2) hideFieldError('instagram');
+  });
+
+  // 6. Screenshot Upload & Automatic Client Compression
+  uploadDropzone.addEventListener('click', () => screenshotInput.click());
+
+  screenshotInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleFileSelected(e.target.files[0]);
+    }
+  });
+
+  function handleFileSelected(file) {
+    hideFieldError('screenshot');
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      showFieldError('screenshot', 'Format file tidak didukung! Harap pilih foto JPG atau PNG.');
+      return;
+    }
+
+    const maxSize = (window.APP_CONFIG && window.APP_CONFIG.MAX_FILE_SIZE_BYTES) || (5 * 1024 * 1024);
+    if (file.size > maxSize) {
+      showFieldError('screenshot', 'Ukuran foto terlalu besar! Maksimal ukuran adalah 5 MB.');
+      return;
+    }
+
+    selectedFile = file;
+    fileNameDisplay.textContent = file.name;
+    const sizeInKb = (file.size / 1024).toFixed(0);
+    fileSizeDisplay.textContent = file.size > 1024 * 1024 
+      ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+      : sizeInKb + ' KB';
+
+    // Kompresi gambar client-side (Max 1200px, JPEG 0.75)
+    compressImage(file).then((dataUrl) => {
+      imagePreview.src = dataUrl;
+      selectedFileBase64 = dataUrl;
+      uploadDropzone.classList.add('hidden');
+      previewWrapper.classList.remove('hidden');
+      lucide.createIcons();
+    }).catch((err) => {
+      console.warn('Fallback kompresi gambar:', err);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.src = e.target.result;
+        selectedFileBase64 = e.target.result;
+        uploadDropzone.classList.add('hidden');
+        previewWrapper.classList.remove('hidden');
+        lucide.createIcons();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function compressImage(file, maxDimension = 1200, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  btnRemoveImage.addEventListener('click', () => {
+    selectedFile = null;
+    selectedFileBase64 = null;
+    screenshotInput.value = '';
+    imagePreview.src = '';
+    fileNameDisplay.textContent = '';
+    fileSizeDisplay.textContent = '';
+    previewWrapper.classList.add('hidden');
+    uploadDropzone.classList.remove('hidden');
+  });
+
+  // 7. Validasi Kode Quiz
+  function validateQuizCode() {
+    const rawCode = (kodeQuizInput.value || '').trim().toUpperCase().replace(/[\s-]/g, '');
+    const validCodes = (window.APP_CONFIG && window.APP_CONFIG.VALID_QUIZ_CODES) || ['2134', '1423', '1234', 'GRYA2026'];
+    const isValid = validCodes.some(c => c.toUpperCase().replace(/[\s-]/g, '') === rawCode);
+
+    if (!rawCode || !isValid) {
+      showFieldError('kodeQuiz', 'Kode belum tepat, coba periksa kembali jawabanmu');
+      quizCodeCard.classList.remove('shake-it');
+      void quizCodeCard.offsetWidth;
+      quizCodeCard.classList.add('shake-it');
+      kodeQuizInput.classList.add('error-border');
+      return false;
+    }
+
+    hideFieldError('kodeQuiz');
+    kodeQuizInput.classList.remove('error-border');
+    kodeQuizInput.classList.add('success-border');
+    return rawCode;
+  }
+
+  kodeQuizInput.addEventListener('input', () => {
+    hideFieldError('kodeQuiz');
+    kodeQuizInput.classList.remove('error-border');
+  });
+
+  // 8. Field Error Helpers
   function showFieldError(fieldId, message) {
     const errEl = document.getElementById(`${fieldId}Error`);
     const inputEl = document.getElementById(fieldId);
@@ -147,14 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
     globalAlert.classList.add('hidden');
   }
 
-  // 3. Form Submission
+  // 9. Form Submission
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideGlobalAlert();
 
     let hasError = false;
 
-    // Validasi 1: Nama
+    // 1. Validasi Nama
     const namaVal = namaInput.value.trim();
     if (!namaVal || namaVal.length < 3) {
       showFieldError('nama', 'Nama Lengkap wajib diisi minimal 3 karakter.');
@@ -163,19 +358,58 @@ document.addEventListener('DOMContentLoaded', () => {
       hideFieldError('nama');
     }
 
-    // Validasi 2: WhatsApp
+    // 2. Validasi WhatsApp
     const cleanWa = validateWhatsApp();
     if (!cleanWa) {
       hasError = true;
     }
 
-    // Validasi 3: Alamat Pengiriman
+    // 3. Validasi Alamat
     const alamatVal = alamatInput.value.trim();
     if (!alamatVal || alamatVal.length < 10) {
       showFieldError('alamat', 'Harap isi alamat pengiriman dengan lengkap (minimal 10 karakter).');
       hasError = true;
     } else {
       hideFieldError('alamat');
+    }
+
+    // 4. Validasi Bukti Screenshot
+    if (!selectedFile) {
+      showFieldError('screenshot', 'Screenshot Instagram Story wajib diunggah.');
+      hasError = true;
+    } else {
+      hideFieldError('screenshot');
+    }
+
+    // 5. Validasi Checkbox Tag
+    if (!checkTagInput.checked) {
+      showFieldError('checkTag', 'Harap konfirmasi bahwa Anda sudah men-tag @kementerianpkp');
+      hasError = true;
+    } else {
+      hideFieldError('checkTag');
+    }
+
+    // 6. Validasi Username Instagram
+    const instagramVal = instagramInput.value.trim();
+    if (!instagramVal || instagramVal.length < 2) {
+      showFieldError('instagram', 'Username Instagram peserta wajib diisi.');
+      hasError = true;
+    } else {
+      hideFieldError('instagram');
+    }
+
+    // 7. Validasi Kode Quiz
+    const cleanQuizCode = validateQuizCode();
+    if (!cleanQuizCode) {
+      hasError = true;
+    }
+
+    // 8. Validasi Persetujuan
+    if (!persetujuanInput.checked) {
+      showFieldError('persetujuan', 'Anda wajib menyetujui ketentuan kuis untuk mengirim data.');
+      hasError = true;
+    } else {
+      hideFieldError('persetujuan');
     }
 
     if (hasError) {
@@ -203,13 +437,14 @@ document.addEventListener('DOMContentLoaded', () => {
         whatsapp: cleanWa,
         alamat: alamatVal,
         alamatPengiriman: alamatVal,
-        // Kompatibilitas mundur dengan script/spreadsheet sebelumnya:
+        screenshotBase64: selectedFileBase64,
+        instagram: instagramVal,
+        kodeQuiz: cleanQuizCode,
+        persetujuan: true,
+        // Fallback kompatibilitas dengan sheet lama:
         nip: ('000000' + cleanWa).slice(-18),
         unitOrganisasi: 'Alamat Pengiriman',
-        unitKerja: alamatVal,
-        instagram: '-',
-        kodeQuiz: '2134',
-        persetujuan: true
+        unitKerja: alamatVal
       };
 
       if (appsScriptUrl && appsScriptUrl.trim().length > 10) {
@@ -231,10 +466,19 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        const formData = new FormData();
+        formData.append('nama', namaVal);
+        formData.append('whatsapp', cleanWa);
+        formData.append('alamat', alamatVal);
+        formData.append('alamatPengiriman', alamatVal);
+        formData.append('instagram', instagramVal);
+        formData.append('kodeQuiz', cleanQuizCode);
+        formData.append('persetujuan', 'true');
+        formData.append('screenshot', selectedFile);
+
         const response = await fetch('/api/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: formData
         });
         resultData = await response.json();
       }
@@ -251,6 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         receiptNama.textContent = submittedNama;
         receiptWhatsapp.textContent = submittedWa;
         receiptAlamat.textContent = submittedAlamat;
+        if (receiptKodeQuiz) receiptKodeQuiz.textContent = cleanQuizCode;
         receiptKodeUnik.textContent = uniqueCode;
 
         const timeEl = document.getElementById('receiptTime');
@@ -259,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // WhatsApp Share Link
-        const shareMsg = `*TANDA TERIMA UNDIAN KUIS DETEKTIF GRYA*\nKementerian Perumahan dan Kawasan Permukiman\n\nNama: ${submittedNama}\nNomor WhatsApp: ${submittedWa}\nAlamat Pengiriman: ${submittedAlamat}\nKode Bukti: *${uniqueCode}*\n\nSimpan pesan ini sebagai bukti keikutsertaan undian berhadiah Majalah GRYA Edisi II.`;
+        const shareMsg = `*TANDA TERIMA KUIS DETEKTIF GRYA*\nKementerian Perumahan dan Kawasan Permukiman\n\nNama: ${submittedNama}\nNomor WhatsApp: ${submittedWa}\nAlamat Pengiriman: ${submittedAlamat}\nKode Rahasia: ${cleanQuizCode}\nKode Bukti: *${uniqueCode}*\n\nSimpan pesan ini sebagai bukti keikutsertaan undian berhadiah Majalah GRYA Edisi II.`;
         btnShareWa.href = `https://wa.me/?text=${encodeURIComponent(shareMsg)}`;
 
         // Festive Confetti Blast
@@ -276,12 +521,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset form
         form.reset();
+        selectedFile = null;
+        selectedFileBase64 = null;
+        previewWrapper.classList.add('hidden');
+        uploadDropzone.classList.remove('hidden');
+        checkTagCard.classList.remove('is-checked');
+        persetujuanCard.classList.remove('is-checked');
 
       } else {
         const errMsg = resultData.message || 'Gagal mengirim data. Silakan coba beberapa saat lagi.';
         if (errMsg.includes('sudah pernah terkirim') || resultData.errorCode === 'DUPLICATE_WA' || resultData.errorCode === 'DUPLICATE_NIP') {
           showDuplicateWaWarning();
           showGlobalAlert('Nomor WhatsApp ini sudah pernah terdaftar untuk undian.', true);
+        } else if (resultData.errorCode === 'INVALID_QUIZ_CODE') {
+          showFieldError('kodeQuiz', 'Kode belum tepat, coba periksa kembali jawabanmu');
+          quizCodeCard.classList.add('shake-it');
+          kodeQuizInput.focus();
         } else {
           showGlobalAlert(errMsg, true);
         }
@@ -307,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 4. Salin Kode Unik
+  // 10. Salin Kode Unik
   btnCopyCode.addEventListener('click', () => {
     const code = receiptKodeUnik.textContent;
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -324,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 5. Tutup Modal Sukses
+  // 11. Tutup Modal Sukses
   btnCloseSuccess.addEventListener('click', () => {
     successModal.classList.add('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });

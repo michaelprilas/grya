@@ -42,6 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const winnerCard = document.getElementById('winnerCard');
   const poolCountText = document.getElementById('poolCountText');
 
+  const imageModal = document.getElementById('imageModal');
+  const imageModalSrc = document.getElementById('imageModalSrc');
+  const imageModalTitle = document.getElementById('imageModalTitle');
+  const imageModalDirectLink = document.getElementById('imageModalDirectLink');
+  const btnCloseImageModal = document.getElementById('btnCloseImageModal');
+
+  const configModal = document.getElementById('configModal');
+  const btnOpenConfigModal = document.getElementById('btnOpenConfigModal');
+  const btnCloseConfigModal = document.getElementById('btnCloseConfigModal');
+  const configForm = document.getElementById('configForm');
+  const newQuizCodeInput = document.getElementById('newQuizCodeInput');
+
   let currentSubmissions = [];
   let selectedStatus = 'Semua';
   let adminPassword = sessionStorage.getItem('grya_admin_pwd') || '';
@@ -49,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlPwd = urlParams.get('pwd') || urlParams.get('password');
   if (urlPwd) {
     adminPassword = urlPwd;
-    // Bersihkan URL seketika agar password tidak tersimpan di address bar
     try {
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (e) {}
@@ -123,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Helper mendapatkan alamat pengiriman
   function getItemAlamat(item) {
     if (item.alamat && item.alamat.trim()) return item.alamat.trim();
     if (item.alamatPengiriman && item.alamatPengiriman.trim()) return item.alamatPengiriman.trim();
@@ -177,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Search input handling
   searchInput.addEventListener('input', () => {
     if (searchInput.value.trim().length > 0) {
       btnClearSearch.classList.remove('hidden');
@@ -204,6 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
         (item.nama && item.nama.toLowerCase().includes(query)) ||
         (item.whatsapp && item.whatsapp.includes(query)) ||
         (item.kodeUnik && item.kodeUnik.toLowerCase().includes(query)) ||
+        (item.kodeQuiz && String(item.kodeQuiz).includes(query)) ||
+        (item.instagram && item.instagram.toLowerCase().includes(query)) ||
         alamatText.includes(query) ||
         (item.nip && item.nip.includes(query));
 
@@ -225,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // RENDER MOBILE CARDS (Ergonomic for HP)
+  // RENDER MOBILE CARDS
   // ==========================================
   function renderMobileCards(list) {
     mobileCardsContainer.innerHTML = '';
@@ -246,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const waNumber = (item.whatsapp || '').replace(/\D/g, '');
       const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20Perumahan%20dan%20Kawasan%20Permukiman%20(PKP)%20terkait%20undian%20Majalah%20GRYA...`;
       const alamat = getItemAlamat(item);
+      const photoSrc = item.screenshotUrl || item.linkScreenshot || '';
 
       card.innerHTML = `
         <!-- Card Header: Kode & Status -->
@@ -266,6 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 text-xs active:bg-green-100">
               <i data-lucide="message-circle" class="w-3 h-3"></i> ${escapeHtml(item.whatsapp || '-')}
             </a>
+            ${item.instagram && item.instagram !== '-' ? `
+              <span class="text-[11px] text-gray-500 font-medium">IG: <strong>${escapeHtml(item.instagram)}</strong></span>
+            ` : ''}
           </div>
           <div class="flex items-start gap-1.5 text-xs text-gray-700 mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
             <i data-lucide="map-pin" class="w-4 h-4 text-[#D65A3C] flex-shrink-0 mt-0.5"></i>
@@ -273,8 +288,24 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
 
-        <!-- Action Row: Verification Segmented Buttons -->
-        <div class="pt-2 border-t border-gray-100">
+        <!-- Quick Code Badge -->
+        <div class="flex items-center justify-between text-xs pt-0.5">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] text-gray-500 font-semibold">Kode Kuis:</span>
+            <span class="font-mono font-bold text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-300">
+              ${escapeHtml(item.kodeQuiz || '-')}
+            </span>
+          </div>
+        </div>
+
+        <!-- Action Row: View Photo & Status Buttons -->
+        <div class="pt-2 border-t border-gray-100 space-y-2">
+          ${photoSrc && photoSrc !== '-' ? `
+            <button type="button" class="btn-view-image w-full py-2 bg-blue-50 active:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-blue-200" data-src="${escapeHtml(photoSrc)}" data-nama="${escapeHtml(item.nama)}">
+              <i data-lucide="image" class="w-3.5 h-3.5"></i> Periksa Bukti Instagram Story
+            </button>
+          ` : ''}
+
           <div class="grid grid-cols-3 gap-1.5">
             <button type="button" class="btn-status-verify py-2 rounded-xl text-[11px] font-bold text-white bg-green-600 active:bg-green-700 flex items-center justify-center gap-1 shadow-xs" data-id="${escapeHtml(item.id || item.kodeUnik)}">
               <i data-lucide="check" class="w-3.5 h-3.5"></i> Verifikasi
@@ -315,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const waNumber = (item.whatsapp || '').replace(/\D/g, '');
       const waUrl = `https://wa.me/${waNumber}?text=Halo%20${encodeURIComponent(item.nama)},%20kami%20dari%20Kementerian%20PKP...`;
       const alamat = getItemAlamat(item);
+      const photoSrc = item.screenshotUrl || item.linkScreenshot || '';
 
       tr.innerHTML = `
         <td class="py-3 px-3.5 whitespace-nowrap">
@@ -323,6 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3.5">
           <p class="font-bold text-gray-900">${escapeHtml(item.nama || '-')}</p>
+          ${item.instagram && item.instagram !== '-' ? `
+            <p class="text-[11px] text-pink-700 font-medium">IG: ${escapeHtml(item.instagram)}</p>
+          ` : ''}
         </td>
         <td class="py-3 px-3.5 whitespace-nowrap">
           <a href="${waUrl}" target="_blank" class="text-green-600 hover:text-green-800 font-mono text-xs flex items-center gap-1 font-semibold">
@@ -331,6 +366,18 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
         <td class="py-3 px-3.5 max-w-xs">
           <p class="text-xs text-gray-700 leading-relaxed">${escapeHtml(alamat)}</p>
+        </td>
+        <td class="py-3 px-3.5 text-center whitespace-nowrap">
+          <span class="font-mono font-bold text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded border border-gray-200">
+            ${escapeHtml(item.kodeQuiz || '-')}
+          </span>
+        </td>
+        <td class="py-3 px-3.5 text-center whitespace-nowrap">
+          ${photoSrc && photoSrc !== '-' ? `
+            <button type="button" class="btn-view-image text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-medium inline-flex items-center gap-1 transition-colors" data-src="${escapeHtml(photoSrc)}" data-nama="${escapeHtml(item.nama)}">
+              <i data-lucide="image" class="w-3.5 h-3.5"></i> Lihat
+            </button>
+          ` : '<span class="text-gray-400">-</span>'}
         </td>
         <td class="py-3 px-3.5 text-center whitespace-nowrap">
           ${statusBadge}
@@ -355,6 +402,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function attachActionListeners() {
+    document.querySelectorAll('.btn-view-image').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const src = btn.getAttribute('data-src');
+        const nama = btn.getAttribute('data-nama');
+        if (src) {
+          imageModalSrc.src = src;
+          imageModalTitle.textContent = `Bukti Story: ${nama}`;
+          imageModalDirectLink.href = src;
+          imageModal.classList.remove('hidden');
+          lucide.createIcons();
+        }
+      });
+    });
+
     document.querySelectorAll('.btn-status-verify').forEach(btn => {
       btn.addEventListener('click', () => updateStatus(btn.getAttribute('data-id'), 'Terverifikasi'));
     });
@@ -366,11 +427,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  btnCloseImageModal.addEventListener('click', () => imageModal.classList.add('hidden'));
+
   async function updateStatus(id, newStatus) {
-    // 1. Simpan ke local storage
     localStorage.setItem('grya_admin_status_' + id, newStatus);
 
-    // 2. Optimistic UI update
     const item = currentSubmissions.find(s => s.id === id || s.kodeUnik === id || String(s.rowNumber) === String(id));
     if (item) {
       item.statusVerifikasi = newStatus;
@@ -379,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
       renderDashboard({ submissions: currentSubmissions });
     }
 
-    // 3. Sinkronisasi ke backend di latar belakang
     try {
       const appsScriptUrl = window.APP_CONFIG && window.APP_CONFIG.GOOGLE_APPS_SCRIPT_URL;
       const isOnline = appsScriptUrl && appsScriptUrl.trim().length > 10 && (window.location.hostname.includes('github.io') || !window.location.port || window.location.protocol === 'file:');
@@ -445,7 +505,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function finalizeWinner(verifiedPool) {
     const finalWinner = verifiedPool[Math.floor(Math.random() * verifiedPool.length)];
     
-    // Confetti
     if (window.confetti) {
       confetti({
         particleCount: 150,
@@ -470,7 +529,24 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
   }
 
-  // 6. Ekspor CSV
+  // 6. Modal Config Kode Kuis
+  if (btnOpenConfigModal) {
+    btnOpenConfigModal.addEventListener('click', () => {
+      configModal.classList.remove('hidden');
+    });
+  }
+  if (btnCloseConfigModal) {
+    btnCloseConfigModal.addEventListener('click', () => configModal.classList.add('hidden'));
+  }
+  if (configForm) {
+    configForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Kode kuis valid diatur melalui js/config.js (default: 2134)');
+      configModal.classList.add('hidden');
+    });
+  }
+
+  // 7. Ekspor CSV
   btnExportCsv.addEventListener('click', () => {
     if (currentSubmissions.length === 0) {
       alert('Belum ada data untuk diekspor.');
@@ -483,7 +559,10 @@ document.addEventListener('DOMContentLoaded', () => {
       'Nama Lengkap',
       'Nomor WhatsApp',
       'Alamat Pengiriman Hadiah',
-      'Status Verifikasi'
+      'Username Instagram',
+      'Kode Quiz',
+      'Status Verifikasi',
+      'Link Screenshot'
     ];
 
     const rows = currentSubmissions.map(item => [
@@ -492,7 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
       `"${(item.nama || '').replace(/"/g, '""')}"`,
       `"'${item.whatsapp || ''}"`,
       `"${getItemAlamat(item).replace(/"/g, '""')}"`,
-      `"${item.statusVerifikasi || ''}"`
+      `"${item.instagram || ''}"`,
+      `"${item.kodeQuiz || ''}"`,
+      `"${item.statusVerifikasi || ''}"`,
+      `"${item.screenshotUrl || item.linkScreenshot || ''}"`
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + 
@@ -501,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `peserta_undian_grya_${Date.now()}.csv`);
+    link.setAttribute('download', `peserta_kuis_grya_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
